@@ -1,81 +1,81 @@
-const puppeteer = require("puppeteer");
-getData = require("./getData.js");
-const moment = require("moment");
-moment.locale("uk");
-const dotenv = require("dotenv");
-dotenv.config({ path: "./config.env" });
+const puppeteer = require('puppeteer');
+getData = require('./getData.js');
+const moment = require('moment');
+moment.locale('uk');
+const dotenv = require('dotenv');
+dotenv.config({ path: './config.env' });
 
-const { noLessonsText } = require("../Bot/text.js");
+const { noLessonsText } = require('../Bot/text.js');
 
 const scheduleURL =
   process.env.SCHEDULE_URL ||
-  "https://education.ugi.edu.ua/cgi-bin/timetable.cgi?";
+  'https://education.ugi.edu.ua/cgi-bin/timetable.cgi?';
 
 async function parse(obj) {
   var start = new Date(); // засекли время
   obj.weekShift *= 7;
 
-  const day = moment().add(obj.weekShift, "days").format("dddd");
+  const day = moment().add(obj.weekShift, 'days').format('dddd');
   let sDate, eDate;
 
   switch (day) {
-    case "понеділок": {
-      sDate = moment().add(obj.weekShift, "days").format("L");
+    case 'понеділок': {
+      sDate = moment().add(obj.weekShift, 'days').format('L');
       eDate = moment()
-        .add(obj.weekShift + 6, "days")
-        .format("L");
+        .add(obj.weekShift + 6, 'days')
+        .format('L');
       break;
     }
-    case "вівторок": {
+    case 'вівторок': {
       sDate = moment()
-        .add(obj.weekShift - 1, "days")
-        .format("L");
+        .add(obj.weekShift - 1, 'days')
+        .format('L');
       eDate = moment()
-        .add(obj.weekShift + 5, "days")
-        .format("L");
+        .add(obj.weekShift + 5, 'days')
+        .format('L');
       break;
     }
-    case "середа": {
+    case 'середа': {
       sDate = moment()
-        .add(obj.weekShift - 2, "days")
-        .format("L");
+        .add(obj.weekShift - 2, 'days')
+        .format('L');
       eDate = moment()
-        .add(obj.weekShift + 4, "days")
-        .format("L");
+        .add(obj.weekShift + 4, 'days')
+        .format('L');
       break;
     }
-    case "четвер": {
+    case 'четвер': {
       sDate = moment()
-        .add(obj.weekShift - 3, "days")
-        .format("L");
+        .add(obj.weekShift - 3, 'days')
+        .format('L');
       eDate = moment()
-        .add(obj.weekShift + 3, "days")
-        .format("L");
+        .add(obj.weekShift + 3, 'days')
+        .format('L');
       break;
     }
-    case "п’ятниця": {
+    case 'п’ятниця': {
       sDate = moment()
-        .add(obj.weekShift - 4, "days")
-        .format("L");
+        .add(obj.weekShift - 4, 'days')
+        .format('L');
       eDate = moment()
-        .add(obj.weekShift + 2, "days")
-        .format("L");
+        .add(obj.weekShift + 2, 'days')
+        .format('L');
       break;
     }
-    case "субота": {
+    case 'субота': {
       sDate = moment()
-        .add(obj.weekShift - 5, "days")
-        .format("L");
+        .add(obj.weekShift - 5, 'days')
+        .format('L');
       eDate = moment()
-        .add(obj.weekShift + 1, "days")
-        .format("L");
+        .add(obj.weekShift + 1, 'days')
+        .format('L');
       break;
     }
-    case "неділя": {
+    case 'неділя': {
       sDate = moment()
-        .add(obj.weekShift - 6, "days")
-        .format("L");
-      eDate = moment().add(obj.weekShift, "days").format("L");
+        .add(obj.weekShift - 6, 'days')
+        .format('L');
+      eDate = moment().add(obj.weekShift, 'days').format('L');
       break;
     }
   }
@@ -83,7 +83,7 @@ async function parse(obj) {
   const browser = await puppeteer.launch({
     headless: true,
     defaultViewport: null,
-    args: ["--start-maximized"],
+    args: ['--start-maximized'],
   });
   const page = await browser.newPage();
   try {
@@ -93,9 +93,9 @@ async function parse(obj) {
     await page.type('input[name="sdate"]', sDate);
     await page.type('input[name="edate"]', eDate);
     await page.click('button[type="submit"]');
-    await page.waitForSelector("h4.visible-xs.text-center");
+    await page.waitForSelector('h4.visible-xs.text-center');
     await page
-      .evaluate(() => document.querySelector("body").innerHTML)
+      .evaluate(() => document.querySelector('body').innerHTML)
       .then((response) => {
         result = getData(response);
         result.sDate = sDate;
@@ -109,6 +109,7 @@ async function parse(obj) {
   }
 
   var end = new Date(); // конец измерения
+
   // console.log("Цикл занял " + (end - start) / 1000 + " s");
 
   return result;
@@ -120,32 +121,32 @@ function toMessage(obj, day, value) {
   if (obj1 === undefined) {
     let date;
     switch (day) {
-      case "Понеділок": {
-        date = moment(obj.sDate, "DD.MM.YYYY").add(0, "days").format("L");
+      case 'Понеділок': {
+        date = moment(obj.sDate, 'DD.MM.YYYY').add(0, 'days').format('L');
         break;
       }
-      case "Вівторок": {
-        date = moment(obj.sDate, "DD.MM.YYYY").add(1, "days").format("L");
+      case 'Вівторок': {
+        date = moment(obj.sDate, 'DD.MM.YYYY').add(1, 'days').format('L');
         break;
       }
-      case "Середа": {
-        date = moment(obj.sDate, "DD.MM.YYYY").add(2, "days").format("L");
+      case 'Середа': {
+        date = moment(obj.sDate, 'DD.MM.YYYY').add(2, 'days').format('L');
         break;
       }
-      case "Четвер": {
-        date = moment(obj.sDate, "DD.MM.YYYY").add(3, "days").format("L");
+      case 'Четвер': {
+        date = moment(obj.sDate, 'DD.MM.YYYY').add(3, 'days').format('L');
         break;
       }
       case "П'ятниця": {
-        date = moment(obj.sDate, "DD.MM.YYYY").add(4, "days").format("L");
+        date = moment(obj.sDate, 'DD.MM.YYYY').add(4, 'days').format('L');
         break;
       }
-      case "Субота": {
-        date = moment(obj.sDate, "DD.MM.YYYY").add(5, "days").format("L");
+      case 'Субота': {
+        date = moment(obj.sDate, 'DD.MM.YYYY').add(5, 'days').format('L');
         break;
       }
-      case "Неділя": {
-        date = moment(obj.sDate, "DD.MM.YYYY").add(6, "days").format("L");
+      case 'Неділя': {
+        date = moment(obj.sDate, 'DD.MM.YYYY').add(6, 'days').format('L');
         break;
       }
     }

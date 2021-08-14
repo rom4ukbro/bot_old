@@ -3,7 +3,7 @@ const {
   Markup,
   Scenes: { BaseScene, Stage },
   Scenes,
-} = require("telegraf");
+} = require('telegraf');
 
 const {
   studentWelcome,
@@ -11,17 +11,17 @@ const {
   findQuery,
   toManyQueryFind,
   cantFindQuery,
-} = require("../text");
+} = require('../text');
 const {
   getArrTeacher,
   getArrGroup,
-} = require("../../Parser/getGroupAndTeacher.js");
+} = require('../../Parser/getGroupAndTeacher.js');
 
-const { findGroup, findTeacher } = require("../../Parser/search.js");
+const { findGroup, findTeacher } = require('../../Parser/search.js');
 
 // ===================   Student scene   =========================
 
-const studentScene = new Scenes.BaseScene("studentScene");
+const studentScene = new Scenes.BaseScene('studentScene');
 
 studentScene.enter(async (ctx) => {
   ctx.session.weekShift = 0;
@@ -32,11 +32,11 @@ studentScene.enter(async (ctx) => {
   // Marchik Hotyn
 });
 
-studentScene.command("start", async (ctx) => {
+studentScene.command('start', async (ctx) => {
   ctx.session.time = 0;
   ctx.session.weekShift = 0;
 
-  await ctx.scene.enter("welcomeScene");
+  await ctx.scene.enter('welcomeScene');
 
   ctx.session.id = ctx.message.message_id;
   for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
@@ -44,13 +44,13 @@ studentScene.command("start", async (ctx) => {
   }
 });
 
-studentScene.on("text", (ctx) => {
-  searchFnc("group", ctx);
+studentScene.on('text', (ctx) => {
+  searchFnc('group', ctx);
 });
 
 // ===================   Teacher scene   =========================
 
-const teacherScene = new Scenes.BaseScene("teacherScene");
+const teacherScene = new Scenes.BaseScene('teacherScene');
 
 teacherScene.enter(async (ctx) => {
   ctx.session.time = 0;
@@ -59,11 +59,11 @@ teacherScene.enter(async (ctx) => {
   ctx.editMessageText(teacherWelcome);
 });
 
-teacherScene.command("start", async (ctx) => {
+teacherScene.command('start', async (ctx) => {
   ctx.session.time = 0;
   ctx.session.weekShift = 0;
 
-  await ctx.scene.enter("welcomeScene");
+  await ctx.scene.enter('welcomeScene');
 
   ctx.session.id = ctx.message.message_id;
   for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
@@ -71,8 +71,8 @@ teacherScene.command("start", async (ctx) => {
   }
 });
 
-teacherScene.on("text", (ctx) => {
-  searchFnc("teacher", ctx);
+teacherScene.on('text', (ctx) => {
+  searchFnc('teacher', ctx);
 });
 
 // ===================   Helper`s function   =========================
@@ -83,21 +83,20 @@ function searchFnc(mode, ctx) {
   for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
     if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
   }
-  if (ctx.session.searchArr[0] === "error") {
+  if (ctx.session.searchArr[0] === 'error') {
     ctx.deleteMessage(ctx.message.message_id);
     return ctx.telegram.editMessageText(
       ctx.from.id,
       ctx.session.oneMessegeId,
-      "",
-      "Сталася помилка з сайтом, спробуй пізніше.\nНатисни /start",
+      '',
+      'Сталася помилка з сайтом, спробуй пізніше.\nНатисни /start',
     );
-    // .catch((err) => {});
   }
 
-  if (mode === "group") {
+  if (mode === 'group') {
     ctx.session.resultArr = findGroup(ctx.session.searchArr, ctx.message.text);
   }
-  if (mode === "teacher") {
+  if (mode === 'teacher') {
     ctx.session.resultArr = findTeacher(
       ctx.session.searchArr,
       ctx.message.text,
@@ -110,7 +109,7 @@ function searchFnc(mode, ctx) {
         ctx.deleteMessage(i).catch((err) => {});
     }
     return ctx.telegram
-      .editMessageText(ctx.from.id, ctx.session.oneMessegeId, "", cantFindQuery)
+      .editMessageText(ctx.from.id, ctx.session.oneMessegeId, '', cantFindQuery)
       .catch((err) => {});
   }
   if (ctx.session.resultArr.length === 1) {
@@ -120,7 +119,7 @@ function searchFnc(mode, ctx) {
       if (i != ctx.session.oneMessegeId)
         ctx.deleteMessage(i).catch((err) => {});
     }
-    return ctx.scene.enter("scheduleScene");
+    return ctx.scene.enter('scheduleScene');
   }
   if (
     ctx.session.resultArr.length <= 100 &&
