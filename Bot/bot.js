@@ -82,6 +82,13 @@ try {
   bot.command('start', async (ctx) => {
     ctx.session.id = [];
 
+    if (
+      ctx.message.chat?.type == 'supergroup' ||
+      ctx.message.chat?.type == 'group' ||
+      ctx.message.chat?.type == 'chanel'
+    ) {
+      return ctx.reply(`Я не працюю в ${ctx.message.chat?.type}`);
+    }
     User.findAll({
       where: {
         id: ctx.chat.id,

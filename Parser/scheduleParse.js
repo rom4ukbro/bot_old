@@ -174,7 +174,7 @@ function toWeekMessage(obj, day, value) {
         const el2 = el.items[i];
         message += `_${el2.number}) ${el2.timeBounds}_\n${el2.info}\n\n`;
       }
-      message += '\n\n';
+      message += '\n';
     }
   }
   return message;

@@ -127,6 +127,10 @@ scheduleScene.enter(async (ctx) => {
     ] = { text: checkBtn, callback_data: checkBtn };
     ctx.session.scheduleKeyboard[0] = ctx.session.weekDaysBtn;
     ctx.session.fulDay = fullDays[ctx.session.day];
+    ctx.session.scheduleKeyboard[3][1] = {
+      text: allWeekBtnText,
+      callback_data: allWeekBtnText,
+    };
     ctx.telegram
       .editMessageText(
         ctx.from.id,
@@ -181,6 +185,7 @@ scheduleScene.action(previousWeekText, async (ctx) => {
     await ctx.scene.enter('scheduleScene');
     ctx.answerCbQuery();
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 });
@@ -190,6 +195,7 @@ scheduleScene.action(nextWeekText, async (ctx) => {
     await ctx.scene.enter('scheduleScene');
     ctx.answerCbQuery();
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 });
@@ -202,6 +208,7 @@ scheduleScene.action(todayText, async (ctx) => {
     await ctx.scene.enter('scheduleScene');
     ctx.answerCbQuery();
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 });
@@ -211,6 +218,7 @@ scheduleScene.action(changeQueryBtnText, async (ctx) => {
     await ctx.editMessageText(changeQueryText, choiceKeyboard);
     ctx.answerCbQuery();
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 });
@@ -220,6 +228,7 @@ scheduleScene.action(choiceStudentText, async (ctx) => {
     await ctx.scene.enter('studentScene');
     ctx.answerCbQuery();
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 });
@@ -229,6 +238,7 @@ scheduleScene.action(choiceTeacherText, async (ctx) => {
     await ctx.scene.enter('teacherScene');
     ctx.answerCbQuery();
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 });
@@ -238,6 +248,7 @@ scheduleScene.action(manualDateBtnEntry, (ctx) => {
     ctx.scene.enter('writeDateScene');
     ctx.answerCbQuery();
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 });
@@ -250,6 +261,7 @@ scheduleScene.action(aboutBtnText, async (ctx) => {
     );
     ctx.answerCbQuery();
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 });
@@ -259,7 +271,10 @@ scheduleScene.action(allWeekBtnText, async (ctx) => {
     ctx.session.scheduleKeyboard = scheduleKeyboard;
     ctx.session.weekDaysBtn = [...weekDaysBtn];
     ctx.session.scheduleKeyboard[0] = ctx.session.weekDaysBtn;
-
+    ctx.session.scheduleKeyboard[3][1] = {
+      text: allWeekBtnText + emoji.get(':pushpin:'),
+      callback_data: allWeekBtnText + emoji.get(':pushpin:'),
+    };
     await ctx.editMessageText(
       toWeekMessage(
         await redisGetData(ctx.session.value + '_' + ctx.session.weekShift),
@@ -274,9 +289,7 @@ scheduleScene.action(allWeekBtnText, async (ctx) => {
     );
 
     ctx.answerCbQuery();
-  } catch (e) {
-    console.log(e);
-  }
+  } catch (e) {}
 });
 
 scheduleScene.action('back', async (ctx) => {
@@ -284,6 +297,7 @@ scheduleScene.action('back', async (ctx) => {
     await ctx.scene.enter('scheduleScene');
     ctx.answerCbQuery();
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 });
@@ -316,6 +330,7 @@ writeDateScene.command('start', async (ctx) => {
       ctx.deleteMessage(i).catch((err) => {});
     }
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 });
@@ -372,6 +387,7 @@ writeDateScene.action('back', (ctx) => {
     ctx.scene.enter('scheduleScene');
     ctx.answerCbQuery();
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 });
@@ -395,6 +411,10 @@ async function daySchedule(day, ctx) {
       indexOfArr(ctx.session.weekDaysBtn, ctx.session.day)
     ] = { text: checkBtn, callback_data: checkBtn };
     ctx.session.scheduleKeyboard[0] = ctx.session.weekDaysBtn;
+    ctx.session.scheduleKeyboard[3][1] = {
+      text: allWeekBtnText,
+      callback_data: allWeekBtnText,
+    };
     ctx.session.fulDay = fullDays[ctx.session.day];
     await ctx.editMessageText(
       toMessage(
@@ -410,6 +430,7 @@ async function daySchedule(day, ctx) {
     );
     ctx.answerCbQuery();
   } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
     console.log(e);
   }
 }
