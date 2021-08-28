@@ -5,7 +5,7 @@ moment.locale('uk');
 const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
 
-const { noLessonsText } = require('../Bot/text.js');
+const { noLessonsText, noLessonsWeekText } = require('../Bot/text.js');
 
 const scheduleURL =
   process.env.SCHEDULE_URL ||
@@ -160,4 +160,24 @@ function toMessage(obj, day, value) {
   return message;
 }
 
-module.exports = { parse, toMessage };
+function toWeekMessage(obj, day, value) {
+  var message;
+  if (obj.vx) {
+    return (message = `*${value}\nТиждень ${obj.sDate} - ${obj.eDate}*\n\n${noLessonsWeekText}`);
+  }
+  message = `*${value}\nТиждень ${obj.sDate} - ${obj.eDate}*\n\n`;
+  for (let key in obj) {
+    if (key != 'vx' && key != 'sDate' && key != 'eDate') {
+      const el = obj[key];
+      message += `*${key}*\n`;
+      for (let i = 0; i < el.items.length; i++) {
+        const el2 = el.items[i];
+        message += `_${el2.number}) ${el2.timeBounds}_\n${el2.info}\n\n`;
+      }
+      message += '\n\n';
+    }
+  }
+  return message;
+}
+
+module.exports = { parse, toMessage, toWeekMessage };

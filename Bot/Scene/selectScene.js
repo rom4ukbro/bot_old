@@ -24,23 +24,31 @@ const { findGroup, findTeacher } = require('../../Parser/search.js');
 const studentScene = new Scenes.BaseScene('studentScene');
 
 studentScene.enter(async (ctx) => {
-  ctx.session.weekShift = 0;
-  ctx.session.time = 0;
+  try {
+    ctx.session.weekShift = 0;
+    ctx.session.time = 0;
 
-  ctx.editMessageText(studentWelcome);
-  ctx.session.searchArr = await getArrGroup();
+    ctx.editMessageText(studentWelcome);
+    ctx.session.searchArr = await getArrGroup();
+  } catch (e) {
+    console.log(e);
+  }
   // Marchik Hotyn
 });
 
 studentScene.command('start', async (ctx) => {
-  ctx.session.time = 0;
-  ctx.session.weekShift = 0;
+  try {
+    ctx.session.time = 0;
+    ctx.session.weekShift = 0;
 
-  await ctx.scene.enter('welcomeScene');
+    await ctx.scene.enter('welcomeScene');
 
-  ctx.session.id = ctx.message.message_id;
-  for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
-    ctx.deleteMessage(i).catch((err) => {});
+    ctx.session.id = ctx.message.message_id;
+    for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
+      ctx.deleteMessage(i).catch((err) => {});
+    }
+  } catch (e) {
+    console.log(e);
   }
 });
 
@@ -53,21 +61,29 @@ studentScene.on('text', (ctx) => {
 const teacherScene = new Scenes.BaseScene('teacherScene');
 
 teacherScene.enter(async (ctx) => {
-  ctx.session.time = 0;
-  ctx.session.weekShift = 0;
-  ctx.session.searchArr = await getArrTeacher();
-  ctx.editMessageText(teacherWelcome);
+  try {
+    ctx.session.time = 0;
+    ctx.session.weekShift = 0;
+    ctx.session.searchArr = await getArrTeacher();
+    ctx.editMessageText(teacherWelcome);
+  } catch (e) {
+    console.log(e);
+  }
 });
 
 teacherScene.command('start', async (ctx) => {
-  ctx.session.time = 0;
-  ctx.session.weekShift = 0;
+  try {
+    ctx.session.time = 0;
+    ctx.session.weekShift = 0;
 
-  await ctx.scene.enter('welcomeScene');
+    await ctx.scene.enter('welcomeScene');
 
-  ctx.session.id = ctx.message.message_id;
-  for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
-    ctx.deleteMessage(i).catch((err) => {});
+    ctx.session.id = ctx.message.message_id;
+    for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
+      ctx.deleteMessage(i).catch((err) => {});
+    }
+  } catch (e) {
+    console.log(e);
   }
 });
 
@@ -78,64 +94,77 @@ teacherScene.on('text', (ctx) => {
 // ===================   Helper`s function   =========================
 
 function searchFnc(mode, ctx) {
-  ctx.session.mode = mode;
-  ctx.session.id = ctx.message.message_id;
-  for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
-    if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
-  }
-  if (ctx.session.searchArr[0] === 'error') {
-    ctx.deleteMessage(ctx.message.message_id);
-    return ctx.telegram.editMessageText(
-      ctx.from.id,
-      ctx.session.oneMessegeId,
-      '',
-      'Сталася помилка з сайтом, спробуй пізніше.\nНатисни /start',
-    );
-  }
+  try {
+    ctx.session.mode = mode;
+    ctx.session.id = ctx.message.message_id;
+    for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
+      if (i != ctx.session.oneMessegeId)
+        ctx.deleteMessage(i).catch((err) => {});
+    }
+    if (ctx.session.searchArr[0] === 'error') {
+      ctx.deleteMessage(ctx.message.message_id);
+      return ctx.telegram.editMessageText(
+        ctx.from.id,
+        ctx.session.oneMessegeId,
+        '',
+        'Сталася помилка з сайтом, спробуй пізніше.\nНатисни /start',
+      );
+    }
 
-  if (mode === 'group') {
-    ctx.session.resultArr = findGroup(ctx.session.searchArr, ctx.message.text);
-  }
-  if (mode === 'teacher') {
-    ctx.session.resultArr = findTeacher(
-      ctx.session.searchArr,
-      ctx.message.text,
-    );
-  }
-  if (ctx.session.resultArr.length === 0) {
-    ctx.session.id = ctx.message.message_id;
-    for (i = ctx.session.id; i >= ctx.session.id - 100; i--) {
-      if (i != ctx.session.oneMessegeId)
-        ctx.deleteMessage(i).catch((err) => {});
+    if (mode === 'group') {
+      ctx.session.resultArr = findGroup(
+        ctx.session.searchArr,
+        ctx.message.text,
+      );
     }
-    return ctx.telegram
-      .editMessageText(ctx.from.id, ctx.session.oneMessegeId, '', cantFindQuery)
-      .catch((err) => {});
-  }
-  if (ctx.session.resultArr.length === 1) {
-    ctx.session.value = ctx.session.resultArr[0];
-    ctx.session.id = ctx.message.message_id;
-    for (i = ctx.session.id; i >= ctx.session.id - 100; i--) {
-      if (i != ctx.session.oneMessegeId)
-        ctx.deleteMessage(i).catch((err) => {});
+    if (mode === 'teacher') {
+      ctx.session.resultArr = findTeacher(
+        ctx.session.searchArr,
+        ctx.message.text,
+      );
     }
-    return ctx.scene.enter('scheduleScene');
-  }
-  if (
-    ctx.session.resultArr.length <= 100 &&
-    ctx.session.resultArr.length !== 1
-  ) {
-    return ctx.reply(
-      findQuery,
-      Markup.keyboard(ctx.session.resultArr, { columns: 2 }).oneTime(true),
-    );
-  }
-  if (ctx.session.resultArr.length > 100) {
-    ctx.session.resultArr = ctx.session.resultArr.slice(0, 100);
-    return ctx.reply(
-      toManyQueryFind,
-      Markup.keyboard(ctx.session.resultArr, { columns: 2 }).oneTime(true),
-    );
+    if (ctx.session.resultArr.length === 0) {
+      ctx.session.id = ctx.message.message_id;
+      for (i = ctx.session.id; i >= ctx.session.id - 100; i--) {
+        if (i != ctx.session.oneMessegeId)
+          ctx.deleteMessage(i).catch((err) => {});
+      }
+      return ctx.telegram
+        .editMessageText(
+          ctx.from.id,
+          ctx.session.oneMessegeId,
+          '',
+          cantFindQuery,
+        )
+        .catch((err) => {});
+    }
+    if (ctx.session.resultArr.length === 1) {
+      ctx.session.value = ctx.session.resultArr[0];
+      ctx.session.id = ctx.message.message_id;
+      for (i = ctx.session.id; i >= ctx.session.id - 100; i--) {
+        if (i != ctx.session.oneMessegeId)
+          ctx.deleteMessage(i).catch((err) => {});
+      }
+      return ctx.scene.enter('scheduleScene');
+    }
+    if (
+      ctx.session.resultArr.length <= 100 &&
+      ctx.session.resultArr.length !== 1
+    ) {
+      return ctx.reply(
+        findQuery,
+        Markup.keyboard(ctx.session.resultArr, { columns: 2 }).oneTime(true),
+      );
+    }
+    if (ctx.session.resultArr.length > 100) {
+      ctx.session.resultArr = ctx.session.resultArr.slice(0, 100);
+      return ctx.reply(
+        toManyQueryFind,
+        Markup.keyboard(ctx.session.resultArr, { columns: 2 }).oneTime(true),
+      );
+    }
+  } catch (e) {
+    console.log(e);
   }
 }
 

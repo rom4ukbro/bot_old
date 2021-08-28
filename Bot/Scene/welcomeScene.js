@@ -3,7 +3,7 @@ const {
   Markup,
   Scenes: { BaseScene, Stage },
   Scenes,
-} = require("telegraf");
+} = require('telegraf');
 
 const {
   welcomeText,
@@ -12,7 +12,7 @@ const {
   choiceTeacherText,
   changeQueryText,
   helpText,
-} = require("../text");
+} = require('../text');
 
 // ===================   keyboard   =========================
 
@@ -23,24 +23,37 @@ const choiceKeyboard = Markup.inlineKeyboard([
 
 // ===================   Welcome scene   =========================
 
-const welcomeScene = new Scenes.BaseScene("welcomeScene");
+const welcomeScene = new Scenes.BaseScene('welcomeScene');
 
 welcomeScene.enter((ctx) => {
-  ctx.reply(welcomeText, choiceKeyboard);
+  try {
+    ctx.reply(welcomeText, choiceKeyboard);
 
-  ctx.session.id =
-    ctx?.update?.callback_query?.message?.message_id || ctx.message.message_id;
-  for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
-    ctx.deleteMessage(i).catch((err) => {});
+    ctx.session.id =
+      ctx?.update?.callback_query?.message?.message_id ||
+      ctx.message.message_id;
+    for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
+      ctx.deleteMessage(i).catch((err) => {});
+    }
+  } catch (e) {
+    console.log(e);
   }
 });
 welcomeScene.action(choiceStudentText, (ctx) => {
-  ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
-  ctx.scene.enter("studentScene");
+  try {
+    ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
+    ctx.scene.enter('studentScene');
+  } catch (e) {
+    console.log(e);
+  }
 });
 welcomeScene.action(choiceTeacherText, (ctx) => {
-  ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
-  ctx.scene.enter("teacherScene");
+  try {
+    ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
+    ctx.scene.enter('teacherScene');
+  } catch (e) {
+    console.log(e);
+  }
 });
 
 module.exports = welcomeScene;
