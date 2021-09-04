@@ -150,11 +150,12 @@ function toMessage(obj, day, value) {
         break;
       }
     }
-    return (message = `*${day} ${date}\n${value}*\n\n${noLessonsText}`);
+    return (message = `*${value}\n${day} ${date}*\n\n${noLessonsText}`);
   }
-  message = `*${obj1.day} ${obj1.date}\n${value}*\n\n`;
+  message = `*${value}\n${obj1.day} ${obj1.date}*\n\n`;
   for (let i = 0; i < obj1.items.length; i++) {
     const el = obj1.items[i];
+    el.info = el.info.replace(/`/g, "'");
     message += `_${el.number}) ${el.timeBounds}_\n${el.info}\n\n`;
   }
   return message;
@@ -169,9 +170,10 @@ function toWeekMessage(obj, day, value) {
   for (let key in obj) {
     if (key != 'vx' && key != 'sDate' && key != 'eDate') {
       const el = obj[key];
-      message += `*${key}*\n`;
+      message += `*${el.day} ${el.date}*\n`;
       for (let i = 0; i < el.items.length; i++) {
         const el2 = el.items[i];
+        el2.info = el2.info.replace(/`/g, "'");
         message += `_${el2.number}) ${el2.timeBounds}_\n${el2.info}\n\n`;
       }
       message += '\n';

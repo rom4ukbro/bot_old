@@ -169,9 +169,7 @@ mailingSimpleScene.hears('ТАК', async (ctx) => {
             inline_keyboard: [[{ text: 'Прочитано', callback_data: 'del' }]],
           },
         })
-        .catch((err) => {
-          console.log(err);
-        });
+        .catch((err) => {});
     }
     await ctx.scene.enter('adminPanelScene');
   } catch (e) {

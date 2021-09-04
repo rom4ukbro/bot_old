@@ -1,4 +1,4 @@
-const redis = require("async-redis");
+const redis = require('async-redis');
 
 const client = redis.createClient();
 

@@ -55,29 +55,23 @@ try {
 
   var ids = [];
 
-  User.findAll()
-    .then((result) => {
-      for (let i = 0; i < result.length; i++) {
-        const el = result[i].dataValues.id;
-        ids.push(el);
-      }
-      if (ids.length != 0) {
-        for (let n = 0; n < ids.length; n++) {
-          const element = ids[n];
+  // User.findAll()
+  //   .then((result) => {
+  //     for (let i = 0; i < result.length; i++) {
+  //       const el = result[i].dataValues.id;
+  //       ids.push(el);
+  //     }
+  //     if (ids.length != 0) {
+  //       for (let n = 0; n < ids.length; n++) {
+  //         const element = ids[n];
 
-          bot.telegram
-            .sendMessage(element, updateInfo + '\n\n' + clearHistory)
-            .catch((err) => {
-              console.log(err);
-            });
-
-          if (element == '762348663') {
-            bot.telegram.sendMessage(element, 'Я тебе кохаю');
-          }
-        }
-      }
-    })
-    .catch((err) => {});
+  //         bot.telegram
+  //           .sendMessage(element, updateInfo + '\n\n' + clearHistory)
+  //           .catch((err) => {});
+  //       }
+  //     }
+  //   })
+  //   .catch((err) => {});
 
   bot.command('start', async (ctx) => {
     ctx.session.id = [];
@@ -111,9 +105,7 @@ try {
         }
       })
       .then((res) => {})
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((err) => {});
 
     ctx.session.weekShift = 0;
 
