@@ -78,7 +78,7 @@ function buildNameLess(lessTag, names = '') {
           names += `\n[${str}](${lessTag.childNodes[4]?.attribs?.href})`;
         }
         if (links.length == 0) {
-          names += `${lessTag.childNodes[2].data}}(${lessTag.childNodes[4]?.attribs?.href})`;
+          names += `${lessTag.childNodes[2].data}](${lessTag.childNodes[4]?.attribs?.href})`;
         }
       } else if (lessTag.childNodes[2]?.attribs?.href.length > 2) {
         names = names.trim();
