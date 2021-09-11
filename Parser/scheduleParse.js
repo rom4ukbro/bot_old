@@ -156,8 +156,11 @@ function toMessage(obj, day, value) {
   for (let i = 0; i < obj1.items.length; i++) {
     const el = obj1.items[i];
     el.info = el.info.replace(/`/g, "'");
+    el.info = el.info.replace(/[\n] /g, '\n');
+    el.info = el.info.replace(/; /g, '\n');
     message += `_${el.number}) ${el.timeBounds}_\n${el.info}\n\n`;
   }
+  console.log(message);
   return message;
 }
 
@@ -174,6 +177,7 @@ function toWeekMessage(obj, day, value) {
       for (let i = 0; i < el.items.length; i++) {
         const el2 = el.items[i];
         el2.info = el2.info.replace(/`/g, "'");
+        el2.info = el2.info.replace(/[\n] /g, '\n');
         message += `_${el2.number}) ${el2.timeBounds}_\n${el2.info}\n\n`;
       }
       message += '\n';
