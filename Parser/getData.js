@@ -52,57 +52,53 @@ function buildNameLess(lessTag, names = '') {
     if (lessTag.name === 'br') return buildNameLess(lessTag.next, names);
     if (lessTag.name === 'div') {
       if (lessTag.childNodes.length === 6) {
-        let links = linkify.find(lessTag.childNodes[2].data),
-          pattern = /[а-яёіїґА-ЯЁІЇҐa-zA-Z0-9\.].+[а-яёіїґА-ЯЁІЇҐa-zA-Z0-9\.]/;
-        console.log(links);
-        for (let i = 0; i < links.length; i++) {
-          if (names.charAt(8) == '[')
-            names = names.slice(0, 8) + names.slice(9, names.length) + '\n\n';
-          if (names.charAt(0) == '[') names = names.slice(1) + '\n\n';
-          const el = links[i];
-          let str =
-            i == 0
-              ? lessTag.childNodes[2].data.substring(0, el.start)
-              : lessTag.childNodes[2].data.substring(
-                  links[i - 1].end,
-                  el.start,
-                );
-          str = pattern.exec(str);
-          names += `\n[${str}](${el.href})`;
+        const str = lessTag.childNodes[2].data;
+        const reg = new RegExp(';', 'ig');
+        let arrOfStr,
+          st = 0,
+          costyl = [];
+        while ((arrOfStr = reg.exec(str)) != null) {
+          less = str.slice(st, arrOfStr.index);
+          if (linkify.find(less)[0]) {
+            link = linkify.find(less);
+            less = less.slice(0, link[0].start - 3);
+            names += `\n[${less.trim()}](${link[0].href})`;
+          } else {
+            names += '\n' + less.trim();
+          }
+          costyl.push(st);
+          st = arrOfStr.index + 1;
         }
-        if (links.length != 0) {
-          let str = lessTag.childNodes[2].data.substring(
-            links[links.length - 1].end,
-          );
-          str = pattern.exec(str);
-          names += `\n[${str}](${lessTag.childNodes[4]?.attribs?.href})`;
-        }
-        if (links.length == 0) {
-          names += `${lessTag.childNodes[2].data}](${lessTag.childNodes[4]?.attribs?.href})`;
+        if (str.slice(st)) names += '\n' + str.slice(st);
+        if (lessTag.childNodes[4]?.attribs?.href.length) {
+          if (str.slice(st)) {
+            names = names.replace(
+              str.slice(st),
+              `[${str.slice(st, str.length - 2)}](${
+                lessTag.childNodes[4]?.attribs?.href
+              })`,
+            );
+          } else {
+            names = names.replace(
+              str.slice(costyl[costyl.length - 1], str.length - 3).trim(),
+              `[${str
+                .slice(costyl[costyl.length - 1], str.length - 5)
+                .trim()}](${lessTag.childNodes[4]?.attribs?.href})`,
+            );
+          }
         }
       } else if (lessTag.childNodes[2]?.attribs?.href.length > 2) {
         names = names.trim();
-        names += `](${lessTag.childNodes[2].attribs.href})\n\n`;
+        names = '[' + names + `](${lessTag.childNodes[2].attribs.href})\n\n`;
       } else {
-        if (names.charAt(8) == '[')
-          names = names.slice(0, 8) + names.slice(9, names.length) + '\n\n';
-        if (names.charAt(0) == '[') names = names.slice(1) + '\n\n';
+        names += '\n\n';
       }
 
       return buildNameLess(lessTag.next, names);
     }
   }
   if (lessTag.type === 'text') {
-    if (lessTag.data.trim() === 'онлайн') {
-      names = names.slice(0, -1);
-      names += '`онлайн`[';
-      return buildNameLess(lessTag.next, names);
-    }
-    if (names === '') {
-      names = `[${lessTag.data}`;
-      return buildNameLess(lessTag.next, names);
-    }
-    names += ` ${lessTag.data.trim()}`;
+    names ? (names += ` ${lessTag.data.trim()}`) : (names = `${lessTag.data}`);
     return buildNameLess(lessTag.next, names);
   }
 }

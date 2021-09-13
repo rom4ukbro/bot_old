@@ -55,11 +55,14 @@ const scheduleKeyboard = [
   ],
   [
     { text: changeQueryBtnText, callback_data: changeQueryBtnText },
-    { text: manualDateBtnEntry, callback_data: manualDateBtnEntry },
+    {
+      text: allWeekBtnText,
+      callback_data: allWeekBtnText,
+    },
   ],
   [
+    { text: manualDateBtnEntry, callback_data: manualDateBtnEntry },
     { text: aboutBtnText, callback_data: aboutBtnText },
-    { text: allWeekBtnText, callback_data: allWeekBtnText },
   ],
 ];
 

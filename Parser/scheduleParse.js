@@ -156,11 +156,9 @@ function toMessage(obj, day, value) {
   for (let i = 0; i < obj1.items.length; i++) {
     const el = obj1.items[i];
     el.info = el.info.replace(/`/g, "'");
-    el.info = el.info.replace(/[\n] /g, '\n');
-    el.info = el.info.replace(/; /g, '\n');
+    el.info = el.info.replace(/[\n] /g, ' \n');
     message += `_${el.number}) ${el.timeBounds}_\n${el.info}\n\n`;
   }
-  console.log(message);
   return message;
 }
 
