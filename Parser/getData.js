@@ -5,8 +5,7 @@ function getData(html) {
   data = [];
   const $ = cheerio.load(html);
   let lesson, numLess;
-  if ($('#wrap > div > div > div > div.alert.alert-info').length > 0)
-    return { vx: 'bx' };
+  if ($('#wrap > div > div > div > div.alert.alert-info').length > 0) return { vx: 'bx' };
   else {
     $('table').each(async (i, elem) => {
       let trArr = $(elem).find('tr');
@@ -74,22 +73,23 @@ function buildNameLess(lessTag, names = '') {
           if (str.slice(st)) {
             names = names.replace(
               str.slice(st),
-              `[${str.slice(st, str.length - 2)}](${
-                lessTag.childNodes[4]?.attribs?.href
-              })`,
+              `[${str.slice(st, str.length - 2)}](${lessTag.childNodes[4]?.attribs?.href})`,
             );
           } else {
             names = names.replace(
               str.slice(costyl[costyl.length - 1], str.length - 3).trim(),
-              `[${str
-                .slice(costyl[costyl.length - 1], str.length - 5)
-                .trim()}](${lessTag.childNodes[4]?.attribs?.href})`,
+              `[${str.slice(costyl[costyl.length - 1], str.length - 5).trim()}](${
+                lessTag.childNodes[4]?.attribs?.href
+              })`,
             );
           }
         }
       } else if (lessTag.childNodes[2]?.attribs?.href.length > 2) {
         names = names.trim();
-        names = '[' + names + `](${lessTag.childNodes[2].attribs.href})\n\n`;
+        onl = names.split(' ');
+        if (onl[0] == 'онлайн') {
+          names = `${onl.shift()} [${onl.join(' ')}](${lessTag.childNodes[2].attribs.href})\n\n`;
+        } else names = '[' + names + `](${lessTag.childNodes[2].attribs.href})\n\n`;
       } else {
         names += '\n\n';
       }

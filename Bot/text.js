@@ -2,14 +2,20 @@ const emoji = require('node-emoji');
 
 // ===================   Text   =========================
 
+const mainMenu = 'Головне меню';
+const choiceScheduleText = 'Розклад';
+const choiceProgressText = 'Успішність';
+
 const welcomeText = `Привіт! ${emoji.get(':wave:')}
 Я — твоя права рука під час навчального року, адже в мене ти завжди можеш дізнатись, які в тебе пари протягом тижня ${emoji.get(
   ':smiling_imp:',
-)}
+)}, а також свої оцінки та борги зі всіх предметів
     
 Слідуй вказівкам і знайдеш все потрібне!
     
-Для початку, скажи мені хто ти${emoji.get(':smirk_cat:')}:`;
+Для початку, скажи мені що ти хочеш дізнатися:`;
+
+const chooseWelcomeText = `Для початку, скажи мені хто ти${emoji.get(':smirk_cat:')}:`;
 
 const aboutText = `Бот, що створений, щоб спростити життя студентам і не тільки ${emoji.get(
   ':wink:',
@@ -54,8 +60,7 @@ const changeQueryBtnText = 'Змінити запит';
 const allWeekBtnText = 'Весь тиждень';
 const aboutBtnText = 'Про бота';
 
-const enterDateText =
-  'Просто відправ мені дату в форматі `день.місяць.рік` (01.01.2021)';
+const enterDateText = 'Просто відправ мені дату в форматі `день.місяць.рік` (01.01.2021)';
 const errorDateText =
   'Схоже формат дати не зовсім вірний, спробуй ще раз' +
   'Просто відправ мені дату в форматі `день.місяць.рік` (01.01.2021)';
@@ -82,6 +87,23 @@ const updateInfo =
   'Тепер вона стала ще зручнішою для використання.\n' +
   'Отож, нічого серйозного, розклад пар як і завжди в тебе під руками, ' +
   `твоя задача їх відвідувати${emoji.get(':sweat_smile:')}`;
+
+// ===================   Progress scene   =========================
+
+const progressWelcome = `Щоб показати твої оцінки мені потрібні твої логін та пароль.
+Логін це твоє прізвище, а пароль ти і сам повинен знати(якщо вже забув(ла) то пиши сюди @dekanat_ugi, там тобі допоможуть${emoji.get(
+  ':wink:',
+)})
+Для початку напиши свій логін та пароль через пробіл(\`Login Password\`):`;
+
+const progressTextButton = 'Оцінки';
+const debtsTextButton = 'Борги(?)';
+const noDebtsText = `A ти молодчинка!\nВ тебе жодного боргу. \nТак тримати${emoji.get(':+1:')}`;
+const hasDebtsText = `Оййой, в тебе є кілька боргів, але не засмучуйся! Ти в все здаси!${emoji.get(
+  'ok_hand',
+)}`;
+const loadProgress = 'Зачекай дані завантажуються';
+
 // ===================   Admin panel   =========================
 
 const adminWelcome = 'Вітаю!\nВи ввійшли в панель адміністратора\n\n';
@@ -91,10 +113,10 @@ const mailingText = 'Вибери режим розсилки:';
 // ===================   mailing   =========================
 
 const simpleMail = `Напиши повідомлення яке хочеш відправити всім користувачам бота
-Ти можеш використовувати редагування тексту [Markdown](http://chuvyr.ru/2017/12/telegram-bold-italic-code-link-etc.html)`;
+Ти можеш використовувати редагування тексту [Markdown](https://core.telegram.org/bots/api#formatting-options)`;
 
 const cbMail = `Напиши повідомлення яке хочеш відправити всім користувачам бота і вони зможуть написати відгук
-Ти можеш використовувати редагування тексту [Markdown](http://chuvyr.ru/2017/12/telegram-bold-italic-code-link-etc.html)`;
+Ти можеш використовувати редагування тексту [Markdown](https://core.telegram.org/bots/api#formatting-options)`;
 
 // ===================   days   =========================
 
@@ -119,6 +141,7 @@ const fullDays = {
 };
 
 module.exports = {
+  mainMenu,
   simpleMail,
   cbMail,
   mailingText,
@@ -153,4 +176,13 @@ module.exports = {
   toManyQueryFind,
   cantFindQuery,
   floodText,
+  chooseWelcomeText,
+  choiceScheduleText,
+  choiceProgressText,
+  progressWelcome,
+  progressTextButton,
+  debtsTextButton,
+  noDebtsText,
+  hasDebtsText,
+  loadProgress,
 };

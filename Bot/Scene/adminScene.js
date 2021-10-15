@@ -1,15 +1,8 @@
-const {
-  Telegraf,
-  Markup,
-  Context,
-  Scenes: { BaseScene, Stage },
-  Scenes,
-  session,
-} = require('telegraf');
+const { Markup, Scenes } = require('telegraf');
 const moment = require('moment');
 moment.locale('uk');
 const dotenv = require('dotenv');
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: './.env' });
 const { adminWelcome, mailingText, simpleMail, cbMail } = require('../text.js');
 
 const { User } = require('../../DB/connect.js');
@@ -40,10 +33,9 @@ logInAdminScene.enter((ctx) => {
     if (ctx.chat.id == 548746493) return ctx.scene.enter('adminPanelScene');
     for (let i = 0; i < admins.length; i++) {
       const el = admins[i];
-      if (ctx.chat.id == el || ctx.chat?.username == el)
-        return ctx.scene.enter('adminPanelScene');
+      if (ctx.chat.id == el || ctx.chat?.username == el) return ctx.scene.enter('adminPanelScene');
     }
-    ctx.scene.enter('welcomeScene');
+    ctx.scene.enter('chooseScene');
     return ctx.answerCbQuery('Ти не маєш доступу!', { show_alert: true });
   } catch (e) {
     console.log(e);
@@ -92,7 +84,7 @@ adminPanelScene.action('back', (ctx) => {
 adminPanelScene.action('close', (ctx) => {
   try {
     ctx.deleteMessage(ctx?.update?.callback_query?.message?.message_id);
-    ctx.scene.enter('welcomeScene');
+    ctx.scene.enter('chooseScene');
     ctx.answerCbQuery();
   } catch (e) {
     console.log(e);

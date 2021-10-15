@@ -1,9 +1,4 @@
-const {
-  Telegraf,
-  Markup,
-  Scenes: { BaseScene, Stage },
-  Scenes,
-} = require('telegraf');
+const { Markup, Scenes } = require('telegraf');
 
 const {
   studentWelcome,
@@ -12,10 +7,7 @@ const {
   toManyQueryFind,
   cantFindQuery,
 } = require('../text');
-const {
-  getArrTeacher,
-  getArrGroup,
-} = require('../../Parser/getGroupAndTeacher.js');
+const { getArrTeacher, getArrGroup } = require('../../Parser/getGroupAndTeacher.js');
 
 const { findGroup, findTeacher } = require('../../Parser/search.js');
 
@@ -41,7 +33,7 @@ studentScene.command('start', async (ctx) => {
     ctx.session.time = 0;
     ctx.session.weekShift = 0;
 
-    await ctx.scene.enter('welcomeScene');
+    await ctx.scene.enter('chooseScene');
 
     ctx.session.id = ctx.message.message_id;
     for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
@@ -76,7 +68,7 @@ teacherScene.command('start', async (ctx) => {
     ctx.session.time = 0;
     ctx.session.weekShift = 0;
 
-    await ctx.scene.enter('welcomeScene');
+    await ctx.scene.enter('chooseScene');
 
     ctx.session.id = ctx.message.message_id;
     for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
@@ -98,8 +90,7 @@ function searchFnc(mode, ctx) {
     ctx.session.mode = mode;
     ctx.session.id = ctx.message.message_id;
     for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
-      if (i != ctx.session.oneMessegeId)
-        ctx.deleteMessage(i).catch((err) => {});
+      if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
     }
     if (ctx.session.searchArr[0] === 'error') {
       ctx.deleteMessage(ctx.message.message_id);
@@ -112,45 +103,29 @@ function searchFnc(mode, ctx) {
     }
 
     if (mode === 'group') {
-      ctx.session.resultArr = findGroup(
-        ctx.session.searchArr,
-        ctx.message.text,
-      );
+      ctx.session.resultArr = findGroup(ctx.session.searchArr, ctx.message.text);
     }
     if (mode === 'teacher') {
-      ctx.session.resultArr = findTeacher(
-        ctx.session.searchArr,
-        ctx.message.text,
-      );
+      ctx.session.resultArr = findTeacher(ctx.session.searchArr, ctx.message.text);
     }
     if (ctx.session.resultArr.length === 0) {
       ctx.session.id = ctx.message.message_id;
       for (i = ctx.session.id; i >= ctx.session.id - 100; i--) {
-        if (i != ctx.session.oneMessegeId)
-          ctx.deleteMessage(i).catch((err) => {});
+        if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
       }
       return ctx.telegram
-        .editMessageText(
-          ctx.from.id,
-          ctx.session.oneMessegeId,
-          '',
-          cantFindQuery,
-        )
+        .editMessageText(ctx.from.id, ctx.session.oneMessegeId, '', cantFindQuery)
         .catch((err) => {});
     }
     if (ctx.session.resultArr.length === 1) {
       ctx.session.value = ctx.session.resultArr[0];
       ctx.session.id = ctx.message.message_id;
       for (i = ctx.session.id; i >= ctx.session.id - 100; i--) {
-        if (i != ctx.session.oneMessegeId)
-          ctx.deleteMessage(i).catch((err) => {});
+        if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
       }
       return ctx.scene.enter('scheduleScene');
     }
-    if (
-      ctx.session.resultArr.length <= 100 &&
-      ctx.session.resultArr.length !== 1
-    ) {
+    if (ctx.session.resultArr.length <= 100 && ctx.session.resultArr.length !== 1) {
       return ctx.reply(
         findQuery,
         Markup.keyboard(ctx.session.resultArr, { columns: 2 }).oneTime(true),

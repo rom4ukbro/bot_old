@@ -4,11 +4,13 @@ const dotenv = require('dotenv');
 dotenv.config({ path: '../config.env' });
 
 const host = process.env.DB_HOST,
+  port = process.env.DB_PORT,
   user = process.env.DB_USER,
   password = process.env.DB_PWD;
 
 const pool = mysql.createPool({
   host,
+  port,
   user,
   password,
 });
@@ -25,6 +27,7 @@ pool.query(
 
 const sequelize = new Sequelize('schedule_bot', user, password, {
   host,
+  port,
   dialect: 'mysql',
 });
 (async () => {
@@ -34,7 +37,7 @@ const sequelize = new Sequelize('schedule_bot', user, password, {
     console.log('='.repeat(50));
     console.log('DB created. Start again\n');
     console.log('='.repeat(50));
-    throw new Error();
+    throw new Error(error.message);
   }
 })();
 const User = sequelize.define(

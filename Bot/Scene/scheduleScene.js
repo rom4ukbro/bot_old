@@ -8,7 +8,7 @@ const emoji = require('node-emoji');
 const moment = require('moment');
 moment.locale('uk');
 const dotenv = require('dotenv');
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: './.env' });
 
 const {
   errorLoadText,
@@ -19,7 +19,6 @@ const {
   choiceStudentText,
   choiceTeacherText,
   changeQueryText,
-  helpText,
   nextWeekText,
   todayText,
   previousWeekText,
@@ -31,16 +30,8 @@ const {
   errorDateText,
   floodText,
 } = require('../text');
-const {
-  parse,
-  toMessage,
-  toWeekMessage,
-} = require('../../Parser/scheduleParse.js');
-const {
-  redisWriteData,
-  redisGetData,
-  redisDelData,
-} = require('../../DB/redis.js');
+const { parse, toMessage, toWeekMessage } = require('../../Parser/scheduleParse.js');
+const { redisWriteData, redisGetData, redisDelData } = require('../../DB/redis.js');
 
 const ttl = process.env.TIME_TO_LIVE || 3600 * 2;
 
@@ -80,16 +71,9 @@ const checkBtn = emoji.get(':pushpin:');
 
 scheduleScene.enter(async (ctx) => {
   try {
-    if (
-      !(await redisGetData(ctx.session.value + '_' + ctx.session.weekShift))
-    ) {
+    if (!(await redisGetData(ctx.session.value + '_' + ctx.session.weekShift))) {
       ctx.telegram
-        .editMessageText(
-          ctx.from.id,
-          ctx.session.oneMessegeId,
-          '',
-          loadSchedule,
-        )
+        .editMessageText(ctx.from.id, ctx.session.oneMessegeId, '', loadSchedule)
         .catch((err) => {});
       await redisWriteData(
         ctx.session.value + '_' + ctx.session.weekShift,
@@ -101,36 +85,31 @@ scheduleScene.enter(async (ctx) => {
         ttl,
       );
     }
-    if (
-      (await redisGetData(ctx.session.value + '_' + ctx.session.weekShift))
-        .error == true
-    ) {
+    if ((await redisGetData(ctx.session.value + '_' + ctx.session.weekShift)).error == true) {
       await redisDelData(ctx.session.value + '_' + ctx.session.weekShift);
       return ctx.telegram.editMessageText(
         ctx.from.id,
         ctx.session.oneMessegeId,
         '',
         errorLoadText,
-        Markup.inlineKeyboard([
-          [{ text: 'Спробувати ще раз', callback_data: 'again' }],
-        ]),
+        Markup.inlineKeyboard([[{ text: 'Спробувати ще раз', callback_data: 'again' }]]),
       );
     }
     if (!ctx.session.day) {
       ctx.session.day =
-        moment().format('dd').charAt(0).toUpperCase() +
-        moment().format('dd').charAt(1);
+        moment().format('dd').charAt(0).toUpperCase() + moment().format('dd').charAt(1);
     }
 
     ctx.session.scheduleKeyboard = scheduleKeyboard;
 
     ctx.session.weekDaysBtn = [...weekDaysBtn];
-    ctx.session.weekDaysBtn[
-      indexOfArr(ctx.session.weekDaysBtn, ctx.session.day)
-    ] = { text: checkBtn, callback_data: checkBtn };
+    ctx.session.weekDaysBtn[indexOfArr(ctx.session.weekDaysBtn, ctx.session.day)] = {
+      text: checkBtn,
+      callback_data: checkBtn,
+    };
     ctx.session.scheduleKeyboard[0] = ctx.session.weekDaysBtn;
     ctx.session.fulDay = fullDays[ctx.session.day];
-    ctx.session.scheduleKeyboard[3][1] = {
+    ctx.session.scheduleKeyboard[2][1] = {
       text: allWeekBtnText,
       callback_data: allWeekBtnText,
     };
@@ -205,8 +184,7 @@ scheduleScene.action(nextWeekText, async (ctx) => {
 scheduleScene.action(todayText, async (ctx) => {
   try {
     ctx.session.day =
-      moment().format('dd').charAt(0).toUpperCase() +
-      moment().format('dd').charAt(1);
+      moment().format('dd').charAt(0).toUpperCase() + moment().format('dd').charAt(1);
     ctx.session.weekShift = 0;
     await ctx.scene.enter('scheduleScene');
     ctx.answerCbQuery();
@@ -274,7 +252,7 @@ scheduleScene.action(allWeekBtnText, async (ctx) => {
     ctx.session.scheduleKeyboard = scheduleKeyboard;
     ctx.session.weekDaysBtn = [...weekDaysBtn];
     ctx.session.scheduleKeyboard[0] = ctx.session.weekDaysBtn;
-    ctx.session.scheduleKeyboard[3][1] = {
+    ctx.session.scheduleKeyboard[2][1] = {
       text: allWeekBtnText + emoji.get(':pushpin:'),
       callback_data: allWeekBtnText + emoji.get(':pushpin:'),
     };
@@ -326,7 +304,7 @@ writeDateScene.command('start', async (ctx) => {
     ctx.session.time = 0;
     ctx.session.weekShift = 0;
 
-    await ctx.scene.enter('welcomeScene');
+    await ctx.scene.enter('chooseScene');
 
     ctx.session.id = ctx.message.message_id;
     for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
@@ -345,18 +323,12 @@ writeDateScene.on('text', (ctx) => {
     if (!pattern.test(ctx.message.text)) {
       ctx.deleteMessage(ctx.message.message_id);
       return ctx.telegram
-        .editMessageText(
-          ctx.from.id,
-          ctx.session.oneMessegeId,
-          '',
-          errorDateText,
-          {
-            parse_mode: 'Markdown',
-            reply_markup: {
-              inline_keyboard: [[{ text: 'Назад', callback_data: 'back' }]],
-            },
+        .editMessageText(ctx.from.id, ctx.session.oneMessegeId, '', errorDateText, {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [[{ text: 'Назад', callback_data: 'back' }]],
           },
-        )
+        })
         .catch((err) => {});
     }
     ctx.deleteMessage(ctx.message.message_id);
@@ -374,10 +346,7 @@ writeDateScene.on('text', (ctx) => {
         7,
     );
     ctx.session.day =
-      moment(ctx.message.text, 'DD.MM.YYYY')
-        .format('dd')
-        .charAt(0)
-        .toUpperCase() +
+      moment(ctx.message.text, 'DD.MM.YYYY').format('dd').charAt(0).toUpperCase() +
       moment(ctx.message.text, 'DD.MM.YYYY').format('dd').charAt(1);
     ctx.scene.enter('scheduleScene');
   } catch (e) {
@@ -402,23 +371,25 @@ async function daySchedule(day, ctx) {
     setTimeout(() => {
       ctx.session.time = 0;
     }, 500);
-    if (ctx.session.time !== 0)
-      return ctx.answerCbQuery(floodText, { show_alert: true });
-    if (!(await redisGetData(ctx.session.value + '_' + ctx.session.weekShift)))
-      return ctx.scene.enter('scheduleScene');
-    ctx.session.time = 1;
+    if (ctx.session.time !== 0) return ctx.answerCbQuery(floodText, { show_alert: true });
+
     ctx.session.scheduleKeyboard = scheduleKeyboard;
     ctx.session.weekDaysBtn = [...weekDaysBtn];
     ctx.session.day = day;
-    ctx.session.weekDaysBtn[
-      indexOfArr(ctx.session.weekDaysBtn, ctx.session.day)
-    ] = { text: checkBtn, callback_data: checkBtn };
+    ctx.session.weekDaysBtn[indexOfArr(ctx.session.weekDaysBtn, ctx.session.day)] = {
+      text: checkBtn,
+      callback_data: checkBtn,
+    };
     ctx.session.scheduleKeyboard[0] = ctx.session.weekDaysBtn;
-    ctx.session.scheduleKeyboard[3][1] = {
+    ctx.session.scheduleKeyboard[2][1] = {
       text: allWeekBtnText,
       callback_data: allWeekBtnText,
     };
     ctx.session.fulDay = fullDays[ctx.session.day];
+
+    if (!(await redisGetData(ctx.session.value + '_' + ctx.session.weekShift)))
+      return ctx.scene.enter('scheduleScene');
+    ctx.session.time = 1;
     await ctx.editMessageText(
       toMessage(
         await redisGetData(ctx.session.value + '_' + ctx.session.weekShift),

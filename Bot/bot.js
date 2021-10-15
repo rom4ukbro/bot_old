@@ -1,9 +1,6 @@
 const {
   Telegraf,
-  Markup,
-  Context,
-  Scenes: { BaseScene, Stage },
-  Scenes,
+  Scenes: { Stage },
   session,
 } = require('telegraf');
 
@@ -11,12 +8,14 @@ const moment = require('moment');
 moment.locale('uk');
 
 const dotenv = require('dotenv');
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: './.env' });
 
 const { User } = require('../DB/connect.js');
 const { clearHistory, updateInfo } = require('./text.js');
 
 const welcomeScene = require('./Scene/welcomeScene.js');
+const progressScene = require('./Scene/progressScene.js');
+const chooseScene = require('./Scene/chooseScene.js');
 const { studentScene, teacherScene } = require('./Scene/selectScene');
 const { scheduleScene, writeDateScene } = require('./Scene/scheduleScene');
 const {
@@ -37,9 +36,11 @@ if (token === undefined) {
 
 const stage = new Stage([
   welcomeScene,
+  chooseScene,
   studentScene,
   teacherScene,
   scheduleScene,
+  progressScene,
   writeDateScene,
   logInAdminScene,
   adminPanelScene,
@@ -53,25 +54,7 @@ try {
   bot.use(session());
   bot.use(stage.middleware());
 
-  var ids = [];
-
-  // User.findAll()
-  //   .then((result) => {
-  //     for (let i = 0; i < result.length; i++) {
-  //       const el = result[i].dataValues.id;
-  //       ids.push(el);
-  //     }
-  //     if (ids.length != 0) {
-  //       for (let n = 0; n < ids.length; n++) {
-  //         const element = ids[n];
-
-  //         bot.telegram
-  //           .sendMessage(element, updateInfo + '\n\n' + clearHistory)
-  //           .catch((err) => {});
-  //       }
-  //     }
-  //   })
-  //   .catch((err) => {});
+  // mailing();
 
   bot.command('start', async (ctx) => {
     ctx.session.id = [];
@@ -143,7 +126,26 @@ try {
 
   bot.launch();
 } catch (e) {
-  console.log(e);
+  console.log();
+}
+
+async function mailing() {
+  ids = [];
+  User.findAll()
+    .then((result) => {
+      for (let i = 0; i < result.length; i++) {
+        const el = result[i].dataValues.id;
+        ids.push(el);
+      }
+      if (ids.length != 0) {
+        for (let n = 0; n < ids.length; n++) {
+          const element = ids[n];
+
+          bot.telegram.sendMessage(element, updateInfo + '\n\n' + clearHistory).catch((err) => {});
+        }
+      }
+    })
+    .catch((err) => {});
 }
 
 module.exports = { bot };

@@ -3,13 +3,12 @@ getData = require('./getData.js');
 const moment = require('moment');
 moment.locale('uk');
 const dotenv = require('dotenv');
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: './.env' });
 
 const { noLessonsText, noLessonsWeekText } = require('../Bot/text.js');
 
 const scheduleURL =
-  process.env.SCHEDULE_URL ||
-  'https://education.ugi.edu.ua/cgi-bin/timetable.cgi?';
+  process.env.SCHEDULE_URL || 'https://education.ugi.edu.ua/cgi-bin/timetable.cgi?';
 
 async function parse(obj) {
   var start = new Date(); // засекли время
@@ -81,7 +80,7 @@ async function parse(obj) {
   }
   let result = {};
   const browser = await puppeteer.launch({
-    headless: true,
+    // headless: false,
     defaultViewport: null,
     args: ['--start-maximized'],
   });
@@ -156,7 +155,7 @@ function toMessage(obj, day, value) {
   for (let i = 0; i < obj1.items.length; i++) {
     const el = obj1.items[i];
     el.info = el.info.replace(/`/g, "'");
-    el.info = el.info.replace(/[\n] /g, ' \n');
+    el.info = el.info.replace(/\n\  /g, '\n');
     message += `_${el.number}) ${el.timeBounds}_\n${el.info}\n\n`;
   }
   return message;
@@ -175,7 +174,7 @@ function toWeekMessage(obj, day, value) {
       for (let i = 0; i < el.items.length; i++) {
         const el2 = el.items[i];
         el2.info = el2.info.replace(/`/g, "'");
-        el2.info = el2.info.replace(/[\n] /g, '\n');
+        el2.info = el2.info.replace(/\n\  /g, '\n');
         message += `_${el2.number}) ${el2.timeBounds}_\n${el2.info}\n\n`;
       }
       message += '\n';
