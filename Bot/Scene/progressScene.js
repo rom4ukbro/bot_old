@@ -31,8 +31,8 @@ progressScene.enter((ctx) => {
     for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
       ctx.deleteMessage(i).catch((err) => {});
     }
-  } catch (e) {
-    console.log(e);
+  } catch (err) {
+    console.log(err);
   }
 });
 
