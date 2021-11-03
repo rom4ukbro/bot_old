@@ -14,7 +14,7 @@ const { User } = require('../DB/connect.js');
 const { clearHistory, updateInfo } = require('./text.js');
 
 const welcomeScene = require('./Scene/welcomeScene.js');
-const progressScene = require('./Scene/progressScene.js');
+const progressScene = require('./Scene/progressScene');
 const chooseScene = require('./Scene/chooseScene.js');
 const { studentScene, teacherScene } = require('./Scene/selectScene');
 const { scheduleScene, writeDateScene } = require('./Scene/scheduleScene');
@@ -35,12 +35,12 @@ if (token === undefined) {
 }
 
 const stage = new Stage([
+  progressScene,
   welcomeScene,
   chooseScene,
   studentScene,
   teacherScene,
   scheduleScene,
-  progressScene,
   writeDateScene,
   logInAdminScene,
   adminPanelScene,
