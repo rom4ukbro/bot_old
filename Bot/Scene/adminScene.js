@@ -158,7 +158,7 @@ mailingSimpleScene.hears('ТАК', async (ctx) => {
           parse_mode: 'Markdown',
           disable_web_page_preview: true,
           reply_markup: {
-            inline_keyboard: [[{ text: 'Прочитано', callback_data: 'del' }]],
+            inline_keyboard: [[{ text: 'Зрозуміло', callback_data: 'del' }]],
           },
         })
         .catch((err) => {});
@@ -237,8 +237,8 @@ mailingCbScene.hears('ТАК', async (ctx) => {
           disable_web_page_preview: true,
           reply_markup: {
             inline_keyboard: [
-              [{ text: 'Написати', callback_data: 'cbScene' }],
-              [{ text: 'Прочитано', callback_data: 'del' }],
+              [{ text: 'Відповісти', callback_data: 'cbScene' }],
+              [{ text: 'Зрозуміло', callback_data: 'del' }],
             ],
           },
         })

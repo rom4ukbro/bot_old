@@ -88,6 +88,7 @@ function getData(html) {
         console.log(err);
       }
     }
+    data.sort((a, b) => (a.points < b.points ? 1 : -1));
     srData = [...data, ...debts];
     sr = Math.round((srData.reduce((a, b) => a + b.points, 0) / srData.length) * 10) / 10;
   });

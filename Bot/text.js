@@ -90,19 +90,22 @@ const updateInfo =
 
 // ===================   Progress scene   =========================
 
-const progressWelcome = `Щоб показати твої оцінки мені потрібні твої логін та пароль.
-Логін це твоє прізвище, а пароль ти і сам повинен знати(якщо вже забув(ла) то пиши сюди @dekanat_ugi, там тобі допоможуть${emoji.get(
-  ':wink:',
-)})
-Для початку напиши свій логін та пароль через пробіл(\`Login Password\`):`;
+const progressWelcome = `Для початку напиши свій логін та пароль через пробіл(\`Login Password\`)
+
+
+Логін це твоє прізвище.
+Якщо забув(ла) пароль, то пиши [сюди](t.me/dekanat_ugi), там тобі допоможуть${emoji.get(':wink:')}`;
 
 const progressTextButton = 'Оцінки';
 const debtsTextButton = 'Борги(?)';
-const noDebtsText = `A ти молодчинка!\nВ тебе жодного боргу. \nТак тримати${emoji.get(':+1:')}`;
+const noDebtsText = `Ти молодчинка!\nВ тебе жодного боргу. \nТак тримати${emoji.get(':+1:')}`;
 const hasDebtsText = `Оййой, в тебе є кілька боргів, але не засмучуйся! Ти в все здаси!${emoji.get(
   'ok_hand',
 )}`;
 const loadProgress = 'Зачекай дані завантажуються';
+
+const errorPassText = 'Твій логін чи пароль написаний не правильно. \nСпробуй ще раз';
+const errorProgressText = 'Сталася помилка, завантажити оцінки не вдалося. \nСпробуй пізніше';
 
 // ===================   Admin panel   =========================
 
@@ -185,4 +188,6 @@ module.exports = {
   noDebtsText,
   hasDebtsText,
   loadProgress,
+  errorPassText,
+  errorProgressText,
 };
