@@ -66,27 +66,19 @@ try {
     ) {
       return ctx.reply(`Я не працюю в ${ctx.message.chat?.type}`);
     }
-    User.findAll({
-      where: {
+
+    User.upsert(
+      {
         id: ctx.chat.id,
+        firstName: ctx.chat.first_name,
+        lastName: ctx.chat?.last_name,
+        userName: ctx.chat?.username,
       },
-    })
-      .then((result) => {
-        if (result.length == 0) {
-          User.create(
-            {
-              id: ctx.chat.id,
-              firstName: ctx.chat.first_name,
-              lastName: ctx.chat?.last_name,
-              userName: ctx.chat?.username,
-            },
-            {
-              ignoreDuplicates: false,
-              onDuplicate: false,
-            },
-          );
-        }
-      })
+      {
+        ignoreDuplicates: false,
+        onDuplicate: false,
+      },
+    )
       .then((res) => {})
       .catch((err) => {});
 
@@ -119,6 +111,11 @@ try {
     ctx.scene.enter('cbScene');
   });
 
+  bot.on('dice', async (ctx) => {
+    ctx.deleteMessage(ctx.message.message_id);
+    ctx;
+  });
+
   bot.on('message', async (ctx) => {
     ctx.deleteMessage(ctx.message.message_id);
     ctx;
@@ -126,7 +123,7 @@ try {
 
   bot.launch();
 } catch (e) {
-  console.log();
+  console.log(e);
 }
 
 async function mailing() {

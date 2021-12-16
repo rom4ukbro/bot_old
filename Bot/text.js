@@ -90,11 +90,13 @@ const updateInfo =
 
 // ===================   Progress scene   =========================
 
-const progressWelcome = `Для початку напиши свій логін та пароль через пробіл(\`Login Password\`)
+const progressWelcome = `
+Для початку напиши свій логін та пароль через пробіл(\`Login Password\`)
 
+Логін це ваша корпоративна пошта за якою ви входите в Moodle і пароль від неї`;
 
-Логін це твоє прізвище.
-Якщо забув(ла) пароль, то пиши [сюди](t.me/dekanat_ugi), там тобі допоможуть${emoji.get(':wink:')}`;
+const progressHelpText =
+  'Якщо тут видає помилку і ти впевнений, що ввів все правильно, то зайди на сайті, а потім спробуй ще раз.';
 
 const progressTextButton = 'Оцінки';
 const debtsTextButton = 'Борги(?)';
@@ -105,6 +107,7 @@ const hasDebtsText = `Оййой, в тебе є кілька боргів, ал
 const loadProgress = 'Зачекай дані завантажуються';
 
 const errorPassText = 'Твій логін чи пароль написаний не правильно. \nСпробуй ще раз';
+const errorLoginText = 'Твій логін написаний не правильно. \nСпробуй ще раз';
 const errorProgressText = 'Сталася помилка, завантажити оцінки не вдалося. \nСпробуй пізніше';
 
 // ===================   Admin panel   =========================
@@ -183,6 +186,7 @@ module.exports = {
   choiceScheduleText,
   choiceProgressText,
   progressWelcome,
+  progressHelpText,
   progressTextButton,
   debtsTextButton,
   noDebtsText,
@@ -190,4 +194,5 @@ module.exports = {
   loadProgress,
   errorPassText,
   errorProgressText,
+  errorLoginText,
 };

@@ -10,8 +10,10 @@ const {
   loadProgress,
   errorPassText,
   errorProgressText,
+  errorLoginText,
+  progressHelpText,
 } = require('../text');
-
+const { redisWriteData, redisGetData, redisDelData } = require('../../DB/redis.js');
 const { progressParse, toMessage } = require('../../Parser/progressParse.js');
 
 // ===================   keyboard   =========================
@@ -22,19 +24,40 @@ const choiceKeyboard = Markup.inlineKeyboard([
   [{ text: mainMenu, callback_data: mainMenu }],
 ]);
 
+const welcomeKeyboard = [
+  [{ text: 'Допомога', callback_data: 'help' }],
+  [{ text: 'Назад', callback_data: mainMenu }],
+];
+
 const backKeyboard = [[{ text: 'Назад', callback_data: mainMenu }]];
 
 // ===================   Welcome scene   =========================
 
 const progressScene = new Scenes.BaseScene('progressScene');
 
-progressScene.enter((ctx) => {
+progressScene.enter(async (ctx) => {
   try {
-    ctx.editMessageText(progressWelcome, {
-      reply_markup: { inline_keyboard: backKeyboard },
-      parse_mode: 'Markdown',
-      disable_web_page_preview: true,
-    });
+    if (!!(await redisGetData(ctx.from.id))?.data) {
+      ctx.session.progress = await redisGetData(ctx.from.id);
+
+      ctx.telegram.editMessageText(
+        ctx.from.id,
+        ctx.session.oneMessegeId,
+        '',
+        `Оцінки ${ctx.session.progress.name}\n\n${toMessage(
+          ctx.session.progress.data,
+        )}\n\nТвій середній бал - ${ctx.session.progress.avarage}`,
+
+        choiceKeyboard,
+      );
+      delete ctx.session.progress;
+    } else {
+      ctx.editMessageText(progressWelcome, {
+        reply_markup: { inline_keyboard: welcomeKeyboard },
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true,
+      });
+    }
 
     for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
       ctx.deleteMessage(i).catch((err) => {});
@@ -58,76 +81,126 @@ progressScene.command('start', async (ctx) => {
 
 progressScene.on('text', async (ctx) => {
   ctx.deleteMessage(ctx.message.message_id);
-  if (ctx.message.text.split(' ').length > 2) {
-    return ctx.telegram.editMessageText(
-      ctx.from.id,
-      ctx.session.oneMessegeId,
-      '',
-      'Надто багато пробілів, спробуй ще раз',
-    );
-  }
-  if (ctx.message.text.split(' ').length < 2) {
-    return ctx.telegram.editMessageText(
-      ctx.from.id,
-      ctx.session.oneMessegeId,
-      '',
-      'Надто мало слів, спробуй ще раз',
-    );
-  }
+
   ctx.telegram.editMessageText(ctx.from.id, ctx.session.oneMessegeId, '', loadProgress);
   try {
-    ctx.session.progress = await progressParse({
-      login: ctx.message.text.split(' ')[0],
-      password: ctx.message.text.split(' ')[1],
-    });
+    ctx.session.payload = ctx.message.text.split(' ');
 
+    !/@ugi.edu.ua/.test(ctx.session.payload[0]) ? (ctx.session.payload[0] += '@ugi.edu.ua') : 0;
+
+    if (ctx.session.payload.length > 2) {
+      return ctx.telegram.editMessageText(
+        ctx.from.id,
+        ctx.session.oneMessegeId,
+        '',
+        'Надто багато слів\nСпробуй ще раз',
+        { reply_markup: { inline_keyboard: backKeyboard } },
+      );
+    }
+    if (ctx.session.payload.length < 2) {
+      return ctx.telegram.editMessageText(
+        ctx.from.id,
+        ctx.session.oneMessegeId,
+        '',
+        'Надто мало слів, напевно ти написав(ла) тільки логін\nСпробуй ще раз',
+        { reply_markup: { inline_keyboard: backKeyboard } },
+      );
+    }
+
+    ctx.session.progress = await progressParse({
+      login: ctx.session.payload[0],
+      password: ctx.session.payload[1],
+    });
+    if (ctx.session.progress.errorLogin) {
+      return ctx.telegram.editMessageText(
+        ctx.from.id,
+        ctx.session.oneMessegeId,
+        '',
+        errorLoginText,
+        { reply_markup: { inline_keyboard: backKeyboard } },
+      );
+    }
     if (ctx.session.progress.errorPass) {
-      ctx.telegram.editMessageText(ctx.from.id, ctx.session.oneMessegeId, '', errorPassText);
+      return ctx.telegram.editMessageText(
+        ctx.from.id,
+        ctx.session.oneMessegeId,
+        '',
+        errorPassText,
+        { reply_markup: { inline_keyboard: backKeyboard } },
+      );
     }
     if (ctx.session.progress.error) {
-      ctx.telegram.editMessageText(
+      return ctx.telegram.editMessageText(
         ctx.from.id,
         ctx.session.oneMessegeId,
         '',
         errorProgressText,
-        backKeyboard,
+        { reply_markup: { inline_keyboard: backKeyboard } },
       );
     }
+
+    await redisWriteData(ctx.from.id, ctx.session.progress, 60 * 60 * 24);
 
     ctx.telegram.editMessageText(
       ctx.from.id,
       ctx.session.oneMessegeId,
       '',
-      toMessage(ctx.session.progress.data, ctx.session.progress.sr),
+      `Оцінки ${ctx.session.progress.name}\n\n${toMessage(
+        ctx.session.progress.data,
+      )}\n\nТвій середній бал - ${ctx.session.progress.avarage}`,
+
       choiceKeyboard,
     );
-    ctx.reply();
+    delete ctx.session.progress;
   } catch (e) {
     console.log(e);
   }
 });
 
-progressScene.action(progressTextButton, (ctx) => {
+progressScene.action(progressTextButton, async (ctx) => {
   try {
+    ctx.session.progress = await redisGetData(ctx.from.id);
+    if (!ctx.session.progress) {
+      ctx.answerCbQuery('Дані зберігаються 24 години, тепер тобі треба перезайти', {
+        show_alert: true,
+      });
+      return ctx.scene.enter('progressScene');
+    }
     ctx.editMessageText(
-      toMessage(ctx.session.progress.data, ctx.session.progress.sr),
+      `Оцінки ${ctx.session.progress.name}\n\n${toMessage(
+        ctx.session.progress.data,
+      )}\n\nТвій середній бал - ${ctx.session.progress.avarage}`,
       choiceKeyboard,
     );
     ctx.answerCbQuery();
+    delete ctx.session.progress;
   } catch (e) {}
 });
 
 progressScene.action(debtsTextButton, async (ctx) => {
   try {
+    ctx.session.progress = await redisGetData(ctx.from.id);
+    if (!ctx.session.progress) {
+      ctx.answerCbQuery('Дані зберігаються 24 години, тепер тобі треба перезайти', {
+        show_alert: true,
+      });
+      return ctx.scene.enter('progressScene');
+    }
     if (!ctx.session.progress.debts.length) {
       ctx.answerCbQuery();
-      return await ctx.editMessageText(noDebtsText, choiceKeyboard);
+      return await ctx.editMessageText(
+        `Борги ${ctx.session.progress.name}\n\n${noDebtsText}`,
+        choiceKeyboard,
+      );
     }
     ctx.answerCbQuery('Ящик пандори відкрито!');
     ctx.editMessageText(
-      hasDebtsText + '\n\n' + toMessage(ctx.session.progress.debts),
+      `Борги ${ctx.session.progress.name}\n\n${hasDebtsText}\n\n${toMessage(
+        ctx.session.progress.debts,
+      )}`,
       choiceKeyboard,
     );
+    delete ctx.session.progress;
   } catch (e) {}
 });
 
@@ -138,5 +211,7 @@ progressScene.action(mainMenu, async (ctx) => {
     ctx.session.progress = null;
   } catch (e) {}
 });
+
+progressScene.action('help', (ctx) => ctx.answerCbQuery(progressHelpText, { show_alert: true }));
 
 module.exports = progressScene;

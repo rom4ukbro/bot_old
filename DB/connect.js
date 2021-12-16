@@ -8,28 +8,25 @@ const host = process.env.DB_HOST,
   user = process.env.DB_USER,
   password = process.env.DB_PWD;
 
-const pool = mysql.createPool({
+const conn = mysql.createConnection({
   host,
   port,
   user,
   password,
 });
 
-pool.query('CREATE DATABASE IF NOT EXISTS schedule_bot', (err, results) => {
+conn.query('CREATE DATABASE IF NOT EXISTS schedule_bot', (err, results) => {
   if (err) console.log(err);
 });
-pool.query(
-  'CREATE TABLE IF NOT EXISTS `schedule_bot`.`users` ( `id` INT NOT NULL , `firstName` VARCHAR(50) NOT NULL , `lastName` VARCHAR(50) NULL , `userName` VARCHAR(32) NULL )',
-  (err, results) => {
-    if (err) console.log(err);
-  },
-);
+
+conn.destroy();
 
 const sequelize = new Sequelize('schedule_bot', user, password, {
   host,
   port,
   dialect: 'mysql',
 });
+
 (async () => {
   try {
     await sequelize.authenticate();
@@ -37,9 +34,10 @@ const sequelize = new Sequelize('schedule_bot', user, password, {
     console.log('='.repeat(50));
     console.log('DB created. Start again\n');
     console.log('='.repeat(50));
-    throw new Error(error.message);
+    throw new Error('');
   }
 })();
+
 const User = sequelize.define(
   'users',
   {
@@ -47,6 +45,7 @@ const User = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true,
+      unique: true,
     },
     firstName: {
       type: DataTypes.STRING,
@@ -67,5 +66,7 @@ const User = sequelize.define(
     tableName: 'users',
   },
 );
+
+User.sync();
 
 module.exports = { User };

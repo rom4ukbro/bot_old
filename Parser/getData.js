@@ -45,6 +45,7 @@ function getData(html) {
 function buildNameLess(lessTag, names = '') {
   if (lessTag.next === null) {
     if (names == undefined) return lessTag.data;
+    names = names.replace('\n\n\n', '\n');
     return names;
   }
   if (lessTag.name) {
@@ -56,14 +57,15 @@ function buildNameLess(lessTag, names = '') {
         let arrOfStr,
           st = 0,
           costyl = [];
+
         while ((arrOfStr = reg.exec(str)) != null) {
           less = str.slice(st, arrOfStr.index);
           if (linkify.find(less)[0]) {
             link = linkify.find(less);
             less = less.slice(0, link[0].start - 3);
-            names += `\n[${less.trim()}](${link[0].href})`;
+            if (!parseInt(less)) names += `\n[${less.trim()}](${link[0].href})`;
           } else {
-            names += '\n' + less.trim();
+            if (!parseInt(less)) names += '\n' + less.trim();
           }
           costyl.push(st);
           st = arrOfStr.index + 1;
@@ -86,19 +88,25 @@ function buildNameLess(lessTag, names = '') {
         }
       } else if (lessTag.childNodes[2]?.attribs?.href.length > 2) {
         names = names.trim();
-        onl = names.split(' ');
-        if (onl[0] == 'онлайн') {
-          names = `${onl.shift()} [${onl.join(' ')}](${lessTag.childNodes[2].attribs.href})\n\n`;
-        } else names = '[' + names + `](${lessTag.childNodes[2].attribs.href})\n\n`;
+        names += `\n[посилання](${lessTag.childNodes[2].attribs.href})\n\n`;
       } else {
         names += '\n\n';
       }
-
       return buildNameLess(lessTag.next, names);
     }
   }
+
   if (lessTag.type === 'text') {
-    names ? (names += ` ${lessTag.data.trim()}`) : (names = `${lessTag.data}`);
+    if (lessTag.data.trim() === 'онлайн') {
+      names = names.slice(0, -1);
+      names += 'онлайн';
+      return buildNameLess(lessTag.next, names);
+    }
+    if (names === '') {
+      names = `${lessTag.data}`;
+      return buildNameLess(lessTag.next, names);
+    }
+    names += ` ${lessTag.data.trim()}`;
     return buildNameLess(lessTag.next, names);
   }
 }

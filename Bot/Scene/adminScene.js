@@ -94,7 +94,9 @@ adminPanelScene.action('close', (ctx) => {
 adminPanelScene.action('info', (ctx) => {
   try {
     ctx.editMessageText(
-      `Бота запущено: ${botStart}\n` + `Користувачів: ${ids.length}\n` + ``,
+      `Бота запущено: ${moment(botStart, 'LLLL').fromNow()}\n` +
+        `Користувачів: ${ids.length}\n` +
+        ``,
       Markup.inlineKeyboard([[{ text: 'Назад', callback_data: 'back' }]]),
     );
     ctx.answerCbQuery();

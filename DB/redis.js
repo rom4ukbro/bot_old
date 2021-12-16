@@ -21,4 +21,5 @@ async function redisGetData(key) {
 async function redisDelData(key) {
   await client.del(key, () => {});
 }
+
 module.exports = { redisWriteData, redisGetData, redisDelData };
