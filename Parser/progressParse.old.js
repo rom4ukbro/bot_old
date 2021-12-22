@@ -14,71 +14,35 @@ async function progressParse(obj) {
     name = '';
 
   const browser = await puppeteer.launch({
-    headless: false,
+    // headless: false,
     defaultViewport: null,
     args: ['--start-maximized'],
   });
   const page = await browser.newPage();
   try {
-    // перехід на сайт
     await page.goto(scheduleURL);
-    await page.waitForSelector(
-      `#wrap > div > div > form > div:nth-child(10) > div.col-md-9.col-xs-12 > a`,
-    );
-    await page.click('#wrap > div > div > form > div:nth-child(10) > div.col-md-9.col-xs-12 > a');
-
-    // написання логіну в гугл
-    await page.waitForNavigation();
-    await page.type(`#identifierId`, obj.login);
-    await page.click('#identifierNext > div > button');
-
-    //  перевірка на правильність паролю
-    try {
-      await page.waitForSelector(
-        '#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div.d2CFce.cDSmF.cxMOTc > div > div.LXRPh > div.dEOOab.RxsGPe > div',
-        { timeout: 1000 },
-      );
-    } catch (e) {}
-    try {
-      if (
-        await page.$(
-          '#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div.d2CFce.cDSmF.cxMOTc > div > div.LXRPh > div.dEOOab.RxsGPe > div',
-        )
-      ) {
-        return { errorLogin: true };
-      }
-    } catch (e) {}
-
-    // написання логіну в майкрософт
-    await page.waitForSelector('#i0116');
-    await page.type(`#i0116`, obj.login);
-    await page.click('#idSIButton9');
-
-    // написання паролю
-    await page.waitForSelector('#i0118');
-    await page.type('#i0118', obj.password);
-
-    await page.waitForSelector(
-      '#lightbox > div:nth-child(3) > div > div.pagination-view.animate.has-identity-banner.slide-in-next > div > div.position-buttons > div.win-button-pin-bottom > div > div > div > div',
-    );
-    await page.click('#idSIButton9');
-
-    //  перевірка на правильність паролю
-    try {
-      await page.waitForSelector('#passwordError', { timeout: 1000 });
-    } catch (e) {}
-
-    if (await page.$('#passwordError')) {
+    await page.waitForSelector(`#user_name`);
+    await page.type(`#user_name`, obj.login);
+    await page.type('#user_pwd', obj.password);
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(1000);
+    const url = await page.url();
+    const regex = /\?n=1/;
+    if (regex.test(url)) {
       return { errorPass: true };
     }
-
-    await page.waitForSelector('#idBtn_Back', { timeout: 7000 });
-    await page.click('#idBtn_Back');
-
-    // перехід до оцінок
+    await page
+      .evaluate(
+        () =>
+          document.querySelector(
+            '#wrap > div > div.navbar.navbar-inverse.navbar-fixed-top > div > div.navbar-header > a.active.navbar-brand.hidden-xs',
+          ).innerHTML,
+      )
+      .then((response) => {
+        name = response;
+      });
     await page.waitForSelector(
       '#wrap > div > div.navbar.navbar-inverse.navbar-fixed-top > div > div.navbar-header > a.active.navbar-brand.visible-xs',
-      { timeout: 1000000 },
     );
     await page.click(
       '#wrap > div > div.navbar.navbar-inverse.navbar-fixed-top > div > div.navbar-collapse.collapse > ul:nth-child(1) > li.dropdown > a',
@@ -106,12 +70,9 @@ async function progressParse(obj) {
   return result;
 }
 
-function getData(html) {
+function getData(html, name) {
   const $ = cheerio.load(html);
-  const name = $(
-    '#wrap > div > div.navbar.navbar-inverse.navbar-fixed-top > div > div.navbar-header > a.active.navbar-brand.hidden-xs',
-  ).text();
-
+  let lesson, numLess;
   let data = [],
     debts = [];
   $('table').each(async (i, elem) => {

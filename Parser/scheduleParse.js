@@ -88,10 +88,10 @@ async function parse(obj) {
   try {
     await page.goto(scheduleURL);
     await page.waitForSelector(`#${obj.mode}`);
-    await page.type(`#${obj.mode}`, obj.value);
     await page.type('input[name="sdate"]', sDate);
     await page.type('input[name="edate"]', eDate);
-    await page.click('button[type="submit"]');
+    await page.type(`#${obj.mode}`, obj.value);
+    await page.keyboard.press(`Enter`);
     await page.waitForSelector('h4.visible-xs.text-center');
     await page
       .evaluate(() => document.querySelector('body').innerHTML)

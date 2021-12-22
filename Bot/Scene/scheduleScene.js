@@ -29,6 +29,7 @@ const {
   enterDateText,
   errorDateText,
   floodText,
+  mainMenu,
 } = require('../text');
 const { parse, toMessage, toWeekMessage } = require('../../Parser/scheduleParse.js');
 const { redisWriteData, redisGetData, redisDelData } = require('../../DB/redis.js');
@@ -45,21 +46,23 @@ const scheduleKeyboard = [
     { text: nextWeekText, callback_data: nextWeekText },
   ],
   [
-    { text: changeQueryBtnText, callback_data: changeQueryBtnText },
+    { text: manualDateBtnEntry, callback_data: manualDateBtnEntry },
     {
       text: allWeekBtnText,
       callback_data: allWeekBtnText,
     },
   ],
   [
-    { text: manualDateBtnEntry, callback_data: manualDateBtnEntry },
-    { text: aboutBtnText, callback_data: aboutBtnText },
+    { text: mainMenu, callback_data: mainMenu },
+    { text: changeQueryBtnText, callback_data: changeQueryBtnText },
   ],
 ];
 
 const choiceKeyboard = Markup.inlineKeyboard([
-  [{ text: choiceStudentText, callback_data: choiceStudentText }],
-  [{ text: choiceTeacherText, callback_data: choiceTeacherText }],
+  [
+    { text: choiceStudentText, callback_data: choiceStudentText },
+    { text: choiceTeacherText, callback_data: choiceTeacherText },
+  ],
   [{ text: 'Назад', callback_data: 'back' }],
 ]);
 
@@ -85,7 +88,7 @@ scheduleScene.enter(async (ctx) => {
         ttl,
       );
     }
-    if ((await redisGetData(ctx.session.value + '_' + ctx.session.weekShift)).error == true) {
+    if ((await redisGetData(ctx.session.value + '_' + ctx.session.weekShift))?.error == true) {
       await redisDelData(ctx.session.value + '_' + ctx.session.weekShift);
       return ctx.telegram.editMessageText(
         ctx.from.id,
@@ -96,8 +99,13 @@ scheduleScene.enter(async (ctx) => {
       );
     }
     if (!ctx.session.day) {
-      ctx.session.day =
-        moment().format('dd').charAt(0).toUpperCase() + moment().format('dd').charAt(1);
+      if (moment().format('LT') > '18:00') {
+        ctx.session.day =
+          moment().add(1, 'day').format('dd').charAt(0).toUpperCase() +
+          moment().add(1, 'day').format('dd').charAt(1);
+      } else
+        ctx.session.day =
+          moment().format('dd').charAt(0).toUpperCase() + moment().format('dd').charAt(1);
     }
 
     ctx.session.scheduleKeyboard = scheduleKeyboard;
@@ -129,7 +137,9 @@ scheduleScene.enter(async (ctx) => {
           reply_markup: { inline_keyboard: ctx.session.scheduleKeyboard },
         },
       )
-      .catch((err) => {});
+      .catch((err) => {
+        console.log(err);
+      });
   } catch (e) {
     console.log(e);
   }
@@ -187,6 +197,16 @@ scheduleScene.action(todayText, async (ctx) => {
       moment().format('dd').charAt(0).toUpperCase() + moment().format('dd').charAt(1);
     ctx.session.weekShift = 0;
     await ctx.scene.enter('scheduleScene');
+    ctx.answerCbQuery();
+  } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
+    console.log(e);
+  }
+});
+
+scheduleScene.action(mainMenu, async (ctx) => {
+  try {
+    await ctx.scene.enter('welcomeScene');
     ctx.answerCbQuery();
   } catch (e) {
     ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
