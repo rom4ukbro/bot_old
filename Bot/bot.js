@@ -10,7 +10,7 @@ moment.locale('uk');
 const dotenv = require('dotenv');
 dotenv.config({ path: './.env' });
 
-const { User } = require('../DB/connect.js');
+const { Users } = require('../DB/connect.js');
 const { clearHistory, updateInfo } = require('./text.js');
 
 const welcomeScene = require('./Scene/welcomeScene.js');
@@ -67,20 +67,50 @@ try {
       return ctx.reply(`Я не працюю в ${ctx.message.chat?.type}`);
     }
 
-    User.upsert(
+    Users.findOneAndUpdate(
+      { _id: ctx.from.id },
       {
-        id: ctx.chat.id,
-        firstName: ctx.chat.first_name,
-        lastName: ctx.chat?.last_name,
-        userName: ctx.chat?.username,
+        _id: ctx.from.id,
+        name: ctx.from.first_name,
+        last_name: ctx.from.last_name,
+        username: ctx.from.username,
       },
       {
-        ignoreDuplicates: false,
-        onDuplicate: false,
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
       },
-    )
-      .then((res) => {})
-      .catch((err) => {});
+      (error, result) => {
+        if (error) console.log(error);
+      },
+    );
+
+    //
+    // mySQL
+    //
+    // User.findAll({
+    //   where: {
+    //     id: ctx.chat.id,
+    //   },
+    // })
+    //   .then((result) => {
+    //     if (result.length == 0) {
+    //       User.create(
+    //         {
+    //           id: ctx.chat.id,
+    //           firstName: ctx.chat.first_name,
+    //           lastName: ctx.chat?.last_name,
+    //           userName: ctx.chat?.username,
+    //         },
+    //         {
+    //           ignoreDuplicates: false,
+    //           onDuplicate: false,
+    //         },
+    //       );
+    //     }
+    //   })
+    //   .then((res) => {})
+    //   .catch((err) => {});
 
     ctx.session.weekShift = 0;
 
@@ -111,11 +141,6 @@ try {
     ctx.scene.enter('cbScene');
   });
 
-  bot.on('dice', async (ctx) => {
-    ctx.deleteMessage(ctx.message.message_id);
-    ctx;
-  });
-
   bot.on('message', async (ctx) => {
     ctx.deleteMessage(ctx.message.message_id);
     ctx;
@@ -123,26 +148,37 @@ try {
 
   bot.launch();
 } catch (e) {
-  console.log(e);
+  console.log();
 }
 
 async function mailing() {
-  ids = [];
-  User.findAll()
-    .then((result) => {
-      for (let i = 0; i < result.length; i++) {
-        const el = result[i].dataValues.id;
-        ids.push(el);
+  Users.find((err, result) => {
+    if (err) console.log(err);
+    if (result.length != 0) {
+      for (let n = 0; n < result.length; n++) {
+        const element = result[n]._id;
+        bot.telegram.sendMessage(element, updateInfo + '\n\n' + clearHistory).catch((err) => {});
       }
-      if (ids.length != 0) {
-        for (let n = 0; n < ids.length; n++) {
-          const element = ids[n];
-
-          bot.telegram.sendMessage(element, updateInfo + '\n\n' + clearHistory).catch((err) => {});
-        }
-      }
-    })
-    .catch((err) => {});
+    }
+  });
+  //
+  //mySQL
+  //
+  //   ids = [];
+  //   User.findAll()
+  //     .then((result) => {
+  //       for (let i = 0; i < result.length; i++) {
+  //         const el = result[i].dataValues.id;
+  //         ids.push(el);
+  //       }
+  //       if (ids.length != 0) {
+  //         for (let n = 0; n < ids.length; n++) {
+  //           const element = ids[n];
+  //           bot.telegram.sendMessage(element, updateInfo + '\n\n' + clearHistory).catch((err) => {});
+  //         }
+  //       }
+  //     })
+  //     .catch((err) => {});
 }
 
 module.exports = { bot };

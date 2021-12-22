@@ -88,7 +88,7 @@ scheduleScene.enter(async (ctx) => {
         ttl,
       );
     }
-    if ((await redisGetData(ctx.session.value + '_' + ctx.session.weekShift)).error == true) {
+    if ((await redisGetData(ctx.session.value + '_' + ctx.session.weekShift))?.error == true) {
       await redisDelData(ctx.session.value + '_' + ctx.session.weekShift);
       return ctx.telegram.editMessageText(
         ctx.from.id,
