@@ -74,6 +74,14 @@ const checkBtn = emoji.get(':pushpin:');
 
 scheduleScene.enter(async (ctx) => {
   try {
+    if (!!ctx.session.default_mode) {
+      ctx.session.value = ctx.session.default_value;
+      ctx.session.mode = ctx.session.default_role;
+      ctx.session.space = ' ';
+    }
+
+    delete ctx.session.default_mode;
+
     if (!(await redisGetData(ctx.session.value + '_' + ctx.session.weekShift))) {
       ctx.telegram
         .editMessageText(ctx.from.id, ctx.session.oneMessegeId, '', loadSchedule)
@@ -130,6 +138,7 @@ scheduleScene.enter(async (ctx) => {
           await redisGetData(ctx.session.value + '_' + ctx.session.weekShift),
           ctx.session.fulDay,
           ctx.session.value,
+          ctx.session.space,
         ),
         {
           parse_mode: 'Markdown',
@@ -140,10 +149,12 @@ scheduleScene.enter(async (ctx) => {
       .catch((err) => {
         console.log(err);
       });
+    delete ctx.session.space;
   } catch (e) {
     console.log(e);
   }
 });
+
 scheduleScene.action('again', (ctx) => {
   ctx.scene.enter('scheduleScene');
 });
@@ -302,6 +313,17 @@ scheduleScene.action('back', async (ctx) => {
     console.log(e);
   }
 });
+
+scheduleScene.action('📌', async (ctx) => {
+  try {
+    await ctx.scene.enter('scheduleScene');
+    ctx.answerCbQuery();
+  } catch (e) {
+    ctx.answerCbQuery('Ой, сталася помилка. Спробуй ще раз');
+    console.log(e);
+  }
+});
+
 // ===================   Write date Scene   =========================
 
 const writeDateScene = new Scenes.BaseScene('writeDateScene');
@@ -321,7 +343,6 @@ writeDateScene.enter((ctx) => {
 
 writeDateScene.command('start', async (ctx) => {
   try {
-    ctx.session.time = 0;
     ctx.session.weekShift = 0;
 
     await ctx.scene.enter('chooseScene');
@@ -392,6 +413,7 @@ async function daySchedule(day, ctx) {
       ctx.session.time = 0;
     }, 500);
     if (ctx.session.time !== 0) return ctx.answerCbQuery(floodText, { show_alert: true });
+    ctx.session.time = 1;
 
     ctx.session.scheduleKeyboard = scheduleKeyboard;
     ctx.session.weekDaysBtn = [...weekDaysBtn];
@@ -409,7 +431,6 @@ async function daySchedule(day, ctx) {
 
     if (!(await redisGetData(ctx.session.value + '_' + ctx.session.weekShift)))
       return ctx.scene.enter('scheduleScene');
-    ctx.session.time = 1;
     await ctx.editMessageText(
       toMessage(
         await redisGetData(ctx.session.value + '_' + ctx.session.weekShift),

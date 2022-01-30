@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+// const Nightmare = require('nightmare');
 getData = require('./getData.js');
 const moment = require('moment');
 moment.locale('uk');
@@ -79,13 +80,38 @@ async function parse(obj) {
     }
   }
   let result = {};
-  const browser = await puppeteer.launch({
-    // headless: false,
-    defaultViewport: null,
-    args: ['--start-maximized'],
-  });
-  const page = await browser.newPage();
   try {
+    // const nightmare = Nightmare({ show: false });
+
+    // await nightmare
+    //   .goto(scheduleURL)
+    //   .click(`#${obj.mode}`)
+    //   .type(`#${obj.mode}`, obj.value)
+    //   .type('input[name="sdate"]', sDate)
+    //   .type('input[name="edate"]', eDate)
+    //   .click(
+    //     '#wrap > div > div > div > div.page-header > form > div:nth-child(3) > div.col-md-6.col-xs-12 > button',
+    //   )
+    //   .wait('h4.visible-xs.text-center')
+    //   .evaluate(() => document.querySelector('body').innerHTML)
+    //   .end()
+    //   .then((response) => {
+    //     result = getData(response);
+    //     result.sDate = sDate;
+    //     result.eDate = eDate;
+    //     console.log(result);
+    //   })
+    //   .catch((error) => {
+    //     console.error('Search failed:', error);
+    //     result.error = true;
+    //   });
+
+    var browser = await puppeteer.launch({
+      // headless: false,
+      defaultViewport: null,
+      args: ['--start-maximized', '--no-sandbox', '--disable-setuid-sandbox', '--single-process'],
+    });
+    const page = await browser.newPage();
     await page.goto(scheduleURL);
     await page.waitForSelector(`#${obj.mode}`);
     await page.type('input[name="sdate"]', sDate);
@@ -104,6 +130,8 @@ async function parse(obj) {
     console.log(err);
     result.error = true;
   } finally {
+    const pages = await browser.pages();
+    await Promise.all(pages.map((page) => page.close()));
     await browser.close();
   }
 
@@ -114,7 +142,7 @@ async function parse(obj) {
   return result;
 }
 
-function toMessage(obj, day, value) {
+function toMessage(obj, day, value, space) {
   obj1 = obj[day];
   var message;
   if (obj1 === undefined) {
@@ -156,8 +184,13 @@ function toMessage(obj, day, value) {
     const el = obj1.items[i];
     el.info = el.info.replace(/`/g, "'");
     el.info = el.info.replace(/\n\  /g, '\n');
-    message += `_${el.number}) ${el.timeBounds}_\n${el.info}\n\n`;
+    space != undefined
+      ? (message += `_${el.number}) ${el.timeBounds}_\n${el.info}\n${space}\n`)
+      : (message += `_${el.number}) ${el.timeBounds}_\n${el.info}\n\n`);
   }
+
+  space == ' ' ? (message += space) : 0;
+
   return message;
 }
 

@@ -49,7 +49,7 @@ const teacherWelcome = `Викладач${emoji.get(':sunglasses:')}
 \nВідправ мені своє прізвище, цього буде достатньо`;
 
 const errorText = `Виникла помилка, спробуй пізніше або звернись в підтримку @prpl_Roman`;
-const errorLoadText = `Не вдалося завантажити розклад, спробуй пізніше ще раз\nМожливо сайт з роскладом впав${emoji.get(
+const errorLoadText = `Не вдалося завантажити розклад, спробуй пізніше ще раз\nМожливо сайт з розкладом впав${emoji.get(
   'crying_cat_face',
 )}\nАбо натисніть /start`;
 const previousWeekText = 'Попередній тиждень';
@@ -88,6 +88,11 @@ const updateInfo =
   'Отож, нічого серйозного, розклад пар як і завжди в тебе під руками, ' +
   `твоя задача їх відвідувати${emoji.get(':sweat_smile:')}`;
 
+const defaultValueText =
+  "Одноразова процедура для того, щоб дізнатися твою групу чи ім'я\nВкажи цю інформацію для того, щоб використання бота стало зручніше\nЩоб змінити значення за замовчуванням використай команду /reset";
+
+const resetDefaultValueText = 'Ти дійсно хочеш оновити значення по замовчуванню?';
+
 // ===================   Progress scene   =========================
 
 const progressWelcome = `
@@ -124,6 +129,8 @@ const simpleMail = `Напиши повідомлення яке хочеш ві
 const cbMail = `Напиши повідомлення яке хочеш відправити всім користувачам бота і вони зможуть написати відгук
 Ти можеш використовувати редагування тексту [Markdown](https://core.telegram.org/bots/api#formatting-options)`;
 
+const updateMail = 'Сповістити всіх про оновлення бота?\nНапиши "ТАК" для підтвердження';
+
 // ===================   days   =========================
 
 const weekDaysBtn = [
@@ -146,11 +153,14 @@ const fullDays = {
   Нд: 'Неділя',
 };
 
+// ===================   Заявки   =========================
+
 module.exports = {
   mainMenu,
   simpleMail,
   cbMail,
   mailingText,
+  updateMail,
   errorLoadText,
   clearHistory,
   updateInfo,
@@ -195,4 +205,6 @@ module.exports = {
   errorPassText,
   errorProgressText,
   errorLoginText,
+  defaultValueText,
+  resetDefaultValueText,
 };

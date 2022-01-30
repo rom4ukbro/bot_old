@@ -49,7 +49,6 @@ function buildNameLess(lessTag, names = '') {
     return names;
   }
   if (lessTag.name) {
-    if (lessTag.name === 'br') return buildNameLess(lessTag.next, names);
     if (lessTag.name === 'div') {
       if (lessTag.childNodes.length === 6) {
         const str = lessTag.childNodes[2].data;
@@ -77,6 +76,7 @@ function buildNameLess(lessTag, names = '') {
               str.slice(st),
               `[${str.slice(st, str.length - 2)}](${lessTag.childNodes[4]?.attribs?.href})`,
             );
+            names = names.replace(/\n /g, '\n');
           } else {
             names = names.replace(
               str.slice(costyl[costyl.length - 1], str.length - 3).trim(),
@@ -88,12 +88,12 @@ function buildNameLess(lessTag, names = '') {
         }
       } else if (lessTag.childNodes[2]?.attribs?.href.length > 2) {
         names = names.trim();
-        names += `\n[посилання](${lessTag.childNodes[2].attribs.href})\n\n`;
+        names += `\n[покликання](${lessTag.childNodes[2].attribs.href})\n\n`;
       } else {
         names += '\n\n';
       }
       return buildNameLess(lessTag.next, names);
-    }
+    } else return buildNameLess(lessTag.next, names);
   }
 
   if (lessTag.type === 'text') {

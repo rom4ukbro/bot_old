@@ -7,6 +7,7 @@ const { welcomeText, choiceScheduleText, choiceProgressText } = require('../text
 const choiceKeyboard = Markup.inlineKeyboard([
   [{ text: choiceScheduleText, callback_data: choiceScheduleText }],
   [{ text: choiceProgressText, callback_data: choiceProgressText }],
+  // [{ text: 'Заяви', callback_data: 'statement' }],
 ]);
 
 // ===================   Welcome scene   =========================
@@ -28,11 +29,32 @@ welcomeScene.enter((ctx) => {
   }
 });
 
+welcomeScene.action('statement', (ctx) => {
+  try {
+    ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
+
+    ctx.scene.enter('statementScene');
+    ctx.answerCbQuery();
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 welcomeScene.action(choiceScheduleText, (ctx) => {
   try {
     ctx.answerCbQuery();
     ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
-    ctx.scene.enter('chooseScene');
+
+    if (!!ctx.session.value && !!ctx.session.mode) {
+      ctx.scene.enter('scheduleScene');
+    } else if (!ctx.session.default_value || !ctx.session.default_role) {
+      ctx.scene.enter('defaultValueScene');
+    } else if (ctx.session.default_value && ctx.session.default_role) {
+      ctx.session.default_mode = true;
+      ctx.scene.enter('scheduleScene');
+    } else {
+      ctx.scene.enter('chooseScene');
+    }
   } catch (e) {
     console.log(e);
   }
@@ -40,7 +62,7 @@ welcomeScene.action(choiceScheduleText, (ctx) => {
 
 welcomeScene.action(choiceProgressText, (ctx) => {
   try {
-    ctx.answerCbQuery();
+    return ctx.answerCbQuery('Це поки що не доступно, бо немає підтримки від деканату :<');
     ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
     ctx.scene.enter('progressScene');
   } catch (e) {

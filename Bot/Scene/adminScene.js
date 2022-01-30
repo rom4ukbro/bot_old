@@ -3,9 +3,17 @@ const moment = require('moment');
 moment.locale('uk');
 const dotenv = require('dotenv');
 dotenv.config({ path: './.env' });
-const { adminWelcome, mailingText, simpleMail, cbMail } = require('../text.js');
+const {
+  adminWelcome,
+  mailingText,
+  simpleMail,
+  cbMail,
+  updateMail,
+  clearHistory,
+  updateInfo,
+} = require('../text.js');
 
-const { User } = require('../../DB/connect.js');
+const { Users } = require('../../DB/connect.js');
 
 const admins = process.env.ADMINS_ID.split(',');
 const botStart = moment().format('LLLL');
@@ -21,6 +29,7 @@ const adminsFncBtn = [
 const mailingKeyboard = Markup.inlineKeyboard([
   [{ text: 'Звичайна', callback_data: 'simple' }],
   [{ text: 'Зворотній відгук', callback_data: 'cb' }],
+  [{ text: 'Сповістити про оновлення', callback_data: 'update' }],
   [{ text: 'Назад', callback_data: 'back' }],
 ]);
 
@@ -48,7 +57,7 @@ const adminPanelScene = new Scenes.BaseScene('adminPanelScene');
 
 var ids = [];
 
-adminPanelScene.enter((ctx) => {
+adminPanelScene.enter(async (ctx) => {
   try {
     ids = [];
     if (ctx?.update?.callback_query?.message?.message_id) {
@@ -57,16 +66,27 @@ adminPanelScene.enter((ctx) => {
       ctx.reply(adminWelcome, Markup.inlineKeyboard(adminsFncBtn));
     }
 
-    User.findAll()
-      .then((result) => {
-        for (let i = 0; i < result.length; i++) {
-          const el = result[i].dataValues.id;
-          ids.push(el);
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    await Users.find()
+      .select('_id')
+      .then((id) =>
+        id.map((item) => {
+          ids.push(item._id);
+        }),
+      );
+
+    //
+    //  mySQL
+    //
+    //   User.findAll()
+    //     .then((result) => {
+    //       for (let i = 0; i < result.length; i++) {
+    //         const el = result[i].dataValues.id;
+    //         ids.push(el);
+    //       }
+    //     })
+    //     .catch((err) => {
+    //       console.log(err);
+    //     });
   } catch (e) {
     console.log(e);
   }
@@ -83,8 +103,7 @@ adminPanelScene.action('back', (ctx) => {
 
 adminPanelScene.action('close', (ctx) => {
   try {
-    ctx.deleteMessage(ctx?.update?.callback_query?.message?.message_id);
-    ctx.scene.enter('chooseScene');
+    ctx.scene.enter('welcomeScene');
     ctx.answerCbQuery();
   } catch (e) {
     console.log(e);
@@ -128,6 +147,14 @@ adminPanelScene.action('cb', (ctx) => {
     console.log(e);
   }
 });
+adminPanelScene.action('update', (ctx) => {
+  try {
+    ctx.scene.enter('mailingUpdateScene');
+    ctx.answerCbQuery();
+  } catch (e) {
+    console.log(e);
+  }
+});
 
 // ===================   Simple mailing scene   =========================
 
@@ -152,6 +179,7 @@ mailingSimpleScene.hears('ТАК', async (ctx) => {
   try {
     ctx.deleteMessage(ctx.message.message_id).catch((err) => {});
     ctx.deleteMessage(ctx.session.adId).catch((err) => {});
+    ctx.deleteMessage(ctx.session.delMess).catch((err) => {});
     for (let n = 0; n < ids.length; n++) {
       const element = ids[n];
 
@@ -165,6 +193,10 @@ mailingSimpleScene.hears('ТАК', async (ctx) => {
         })
         .catch((err) => {});
     }
+
+    delete ctx.session.delMess;
+    delete ctx.session.text;
+
     await ctx.scene.enter('adminPanelScene');
   } catch (e) {
     console.log(e);
@@ -174,7 +206,7 @@ mailingSimpleScene.hears('ТАК', async (ctx) => {
 mailingSimpleScene.on('text', (ctx) => {
   try {
     ctx.session.text = ctx.message.text;
-    ctx.deleteMessage(ctx.message.message_id).catch((err) => {});
+    ctx.session.delMess = ctx.message.message_id;
     ctx.telegram.editMessageText(
       ctx.chat.id,
       ctx.session.adId,
@@ -230,24 +262,24 @@ mailingCbScene.hears('ТАК', async (ctx) => {
   try {
     ctx.deleteMessage(ctx.message.message_id).catch((err) => {});
     ctx.deleteMessage(ctx.session.adId).catch((err) => {});
+    ctx.deleteMessage(ctx.session.delMess).catch((err) => {});
     for (let n = 0; n < ids.length; n++) {
       const element = ids[n];
-      ctx.deleteMessage(ctx.message.message_id);
+
       ctx.telegram
         .sendMessage(element, ctx.session.text, {
           parse_mode: 'Markdown',
           disable_web_page_preview: true,
           reply_markup: {
-            inline_keyboard: [
-              [{ text: 'Відповісти', callback_data: 'cbScene' }],
-              [{ text: 'Зрозуміло', callback_data: 'del' }],
-            ],
+            inline_keyboard: [[{ text: 'Зрозуміло', callback_data: 'del' }]],
           },
         })
-        .catch((err) => {
-          console.log(err);
-        });
+        .catch((err) => {});
     }
+
+    delete ctx.session.delMess;
+    delete ctx.session.text;
+
     await ctx.scene.enter('adminPanelScene');
   } catch (e) {
     console.log(e);
@@ -257,7 +289,7 @@ mailingCbScene.hears('ТАК', async (ctx) => {
 mailingCbScene.on('text', (ctx) => {
   try {
     ctx.session.text = ctx.message.text;
-    ctx.deleteMessage(ctx.message.message_id).catch((err) => {});
+    ctx.session.delMess = ctx.message.message_id;
     ctx.telegram.editMessageText(
       ctx.chat.id,
       ctx.session.adId,
@@ -297,9 +329,75 @@ mailingCbScene.action('back', (ctx) => {
   }
 });
 
+// ===================   Update mailing scene   =========================
+
+const mailingUpdateScene = new Scenes.BaseScene('mailingUpdateScene');
+
+mailingUpdateScene.enter((ctx) => {
+  try {
+    ctx.session.adId = ctx?.update?.callback_query?.message?.message_id;
+    ctx.editMessageText(updateMail, {
+      parse_mode: 'Markdown',
+      disable_web_page_preview: true,
+      reply_markup: {
+        inline_keyboard: [[{ text: 'Назад', callback_data: 'back' }]],
+      },
+    });
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+mailingUpdateScene.hears('ТАК', async (ctx) => {
+  try {
+    ctx.deleteMessage(ctx.message.message_id).catch((err) => {});
+    ctx.deleteMessage(ctx.session.adId).catch((err) => {});
+
+    for (let n = 0; n < ids.length; n++) {
+      const element = ids[n];
+      ctx.telegram.sendMessage(element, updateInfo + '\n\n' + clearHistory).catch((err) => {});
+    }
+
+    await ctx.scene.enter('adminPanelScene');
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+mailingUpdateScene.action('back', (ctx) => {
+  try {
+    ctx.scene.enter('adminPanelScene');
+    ctx.answerCbQuery();
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+async function mailing() {
+  //
+  //mySQL
+  //
+  //   ids = [];
+  //   User.findAll()
+  //     .then((result) => {
+  //       for (let i = 0; i < result.length; i++) {
+  //         const el = result[i].dataValues.id;
+  //         ids.push(el);
+  //       }
+  //       if (ids.length != 0) {
+  //         for (let n = 0; n < ids.length; n++) {
+  //           const element = ids[n];
+  //           bot.telegram.sendMessage(element, updateInfo + '\n\n' + clearHistory).catch((err) => {});
+  //         }
+  //       }
+  //     })
+  //     .catch((err) => {});
+}
+
 module.exports = {
   logInAdminScene,
   adminPanelScene,
   mailingSimpleScene,
   mailingCbScene,
+  mailingUpdateScene,
 };

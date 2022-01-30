@@ -86,6 +86,8 @@ const Users = mongoose.model('users', {
   name: String,
   last_name: String,
   username: String,
+  default_value: String,
+  default_role: String,
 });
 
 module.exports = { Users };

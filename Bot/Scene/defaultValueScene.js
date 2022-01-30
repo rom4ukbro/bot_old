@@ -11,30 +11,39 @@ const { getArrTeacher, getArrGroup } = require('../../Parser/getGroupAndTeacher.
 
 const { findGroup, findTeacher } = require('../../Parser/search.js');
 
-// ===================   Student scene   =========================
+const {
+  chooseWelcomeText,
+  choiceStudentText,
+  choiceTeacherText,
+  defaultValueText,
+} = require('../text');
 
-const studentScene = new Scenes.BaseScene('studentScene');
+const { Users } = require('../../DB/connect.js');
 
-studentScene.enter(async (ctx) => {
+// ===================   keyboard   =========================
+
+const choiceKeyboard = Markup.inlineKeyboard([
+  [
+    { text: choiceStudentText, callback_data: choiceStudentText },
+    { text: choiceTeacherText, callback_data: choiceTeacherText },
+  ],
+  [{ text: 'Назад', callback_data: 'back' }],
+]);
+
+// ===================   defaultValue scene   =========================
+
+const defaultValueScene = new Scenes.BaseScene('defaultValueScene');
+
+const chooseScene = new Scenes.BaseScene('chooseScene');
+
+defaultValueScene.enter((ctx) => {
   try {
-    ctx.session.weekShift = 0;
-    ctx.session.searchArr = await getArrGroup();
+    if (ctx?.update?.callback_query?.message?.message_id)
+      ctx.editMessageText(defaultValueText, choiceKeyboard);
+    else ctx.reply(defaultValueText, choiceKeyboard);
 
-    ctx.editMessageText(studentWelcome);
-  } catch (e) {
-    console.log(e);
-  }
-  // Marchik Hotyn
-});
-
-studentScene.command('start', async (ctx) => {
-  try {
-    ctx.session.weekShift = 0;
-
-    await ctx.scene.enter('chooseScene');
-
-    ctx.session.id = ctx.message.message_id;
-    for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
+    ctx.session.id = ctx?.update?.callback_query?.message?.message_id || ctx.message.message_id;
+    for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
       ctx.deleteMessage(i).catch((err) => {});
     }
   } catch (e) {
@@ -42,25 +51,40 @@ studentScene.command('start', async (ctx) => {
   }
 });
 
-studentScene.on('text', (ctx) => {
-  searchFnc('group', ctx);
+defaultValueScene.action(choiceStudentText, async (ctx) => {
+  try {
+    ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
+    ctx.session.weekShift = 0;
+    ctx.session.searchArr = await getArrGroup();
+    ctx.session.mode = 'group';
+
+    ctx.editMessageText(studentWelcome);
+  } catch (e) {
+    console.log(e);
+  }
 });
 
-// ===================   Teacher scene   =========================
-
-const teacherScene = new Scenes.BaseScene('teacherScene');
-
-teacherScene.enter(async (ctx) => {
+defaultValueScene.action(choiceTeacherText, async (ctx) => {
   try {
+    ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
     ctx.session.weekShift = 0;
     ctx.session.searchArr = await getArrTeacher();
+    ctx.session.mode = 'teacher';
+
     ctx.editMessageText(teacherWelcome);
   } catch (e) {
     console.log(e);
   }
 });
 
-teacherScene.command('start', async (ctx) => {
+defaultValueScene.action('back', async (ctx) => {
+  try {
+    await ctx.scene.enter('welcomeScene');
+    ctx.answerCbQuery();
+  } catch (e) {}
+});
+
+defaultValueScene.command('start', async (ctx) => {
   try {
     ctx.session.weekShift = 0;
 
@@ -75,15 +99,20 @@ teacherScene.command('start', async (ctx) => {
   }
 });
 
-teacherScene.on('text', (ctx) => {
-  searchFnc('teacher', ctx);
+defaultValueScene.on('text', (ctx) => {
+  if (!ctx.session.mode) {
+    ctx.deleteMessage(ctx.message.message_id);
+  } else if (ctx.session.mode == 'group') {
+    searchFnc('group', ctx);
+  } else if (ctx.session.mode == 'teacher') {
+    searchFnc('teacher', ctx);
+  }
 });
 
 // ===================   Helper`s function   =========================
 
 function searchFnc(mode, ctx) {
   try {
-    ctx.session.mode = mode;
     ctx.session.id = ctx.message.message_id;
     for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
       if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
@@ -115,6 +144,27 @@ function searchFnc(mode, ctx) {
     }
     if (ctx.session.resultArr.length === 1) {
       ctx.session.value = ctx.session.resultArr[0];
+
+      Users.findOneAndUpdate(
+        { _id: ctx.from.id },
+        {
+          default_value: ctx.session.resultArr[0],
+          default_role: mode,
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true,
+        },
+        (error, result) => {
+          if (error) return console.log(error);
+        },
+      );
+
+      ctx.session.default_mode = true;
+      ctx.session.default_value = ctx.session.resultArr[0];
+      ctx.session.default_role = mode;
+
       ctx.session.id = ctx.message.message_id;
       for (i = ctx.session.id; i >= ctx.session.id - 100; i--) {
         if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
@@ -139,4 +189,4 @@ function searchFnc(mode, ctx) {
   }
 }
 
-module.exports = { studentScene, teacherScene };
+module.exports = { defaultValueScene };

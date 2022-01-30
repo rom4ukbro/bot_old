@@ -1,5 +1,6 @@
 const {
   Telegraf,
+  Markup,
   Scenes: { Stage },
   session,
 } = require('telegraf');
@@ -11,7 +12,6 @@ const dotenv = require('dotenv');
 dotenv.config({ path: './.env' });
 
 const { Users } = require('../DB/connect.js');
-const { clearHistory, updateInfo } = require('./text.js');
 
 const welcomeScene = require('./Scene/welcomeScene.js');
 const progressScene = require('./Scene/progressScene');
@@ -23,8 +23,27 @@ const {
   adminPanelScene,
   mailingSimpleScene,
   mailingCbScene,
+  mailingUpdateScene,
 } = require('./Scene/adminScene');
+const { defaultValueScene } = require('./Scene/defaultValueScene');
 const { cbScene } = require('./Scene/cbScene.js');
+const { statementScene } = require('./Scene/statementScene/statementScene');
+const { statement1Scene } = require('./Scene/statementScene/statement1Scene');
+const { statement2Scene } = require('./Scene/statementScene/statement2Scene');
+const { statement3Scene } = require('./Scene/statementScene/statement3Scene');
+
+const {
+  resetDefaultValueText,
+  nextWeekText,
+  todayText,
+  previousWeekText,
+  manualDateBtnEntry,
+  changeQueryBtnText,
+  allWeekBtnText,
+  mainMenu,
+} = require('./text');
+
+const http = require('../server');
 
 //
 //
@@ -47,6 +66,12 @@ const stage = new Stage([
   mailingSimpleScene,
   mailingCbScene,
   cbScene,
+  defaultValueScene,
+  mailingUpdateScene,
+  statementScene,
+  statement1Scene,
+  statement2Scene,
+  statement3Scene,
 ]);
 
 const bot = new Telegraf(token);
@@ -67,7 +92,7 @@ try {
       return ctx.reply(`Я не працюю в ${ctx.message.chat?.type}`);
     }
 
-    Users.findOneAndUpdate(
+    await Users.findOneAndUpdate(
       { _id: ctx.from.id },
       {
         _id: ctx.from.id,
@@ -80,64 +105,102 @@ try {
         new: true,
         setDefaultsOnInsert: true,
       },
-      (error, result) => {
-        if (error) console.log(error);
-      },
-    );
+    )
+      .clone()
+      .then(async (result) => {
+        ctx.session.default_value = result?.default_value;
+        ctx.session.default_role = result?.default_role;
+        ctx.session.weekShift = 0;
 
-    //
-    // mySQL
-    //
-    // User.findAll({
-    //   where: {
-    //     id: ctx.chat.id,
-    //   },
-    // })
-    //   .then((result) => {
-    //     if (result.length == 0) {
-    //       User.create(
-    //         {
-    //           id: ctx.chat.id,
-    //           firstName: ctx.chat.first_name,
-    //           lastName: ctx.chat?.last_name,
-    //           userName: ctx.chat?.username,
-    //         },
-    //         {
-    //           ignoreDuplicates: false,
-    //           onDuplicate: false,
-    //         },
-    //       );
-    //     }
-    //   })
-    //   .then((res) => {})
-    //   .catch((err) => {});
+        await ctx.scene.enter('welcomeScene');
 
-    ctx.session.weekShift = 0;
+        ctx.session.id = ctx.message.message_id;
 
-    await ctx.scene.enter('welcomeScene');
-
-    ctx.session.id = ctx.message.message_id;
-
-    for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
-      ctx.deleteMessage(i).catch((err) => {});
-    }
-    ctx.deleteMessage(ctx.session.oneMessegeId).catch((err) => {});
+        for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
+          ctx.deleteMessage(i).catch((err) => {});
+        }
+        ctx.deleteMessage(ctx.session.oneMessegeId).catch((err) => {});
+      })
+      .catch((err) => {
+        ctx.reply(
+          'Щось пішло не так, спробуй ще(/start) раз або звернися по допомогу до творця бота',
+        );
+        console.log(err);
+      });
   });
 
   bot.command('admin', (ctx) => {
-    ctx.scene.enter('logInAdminScene');
+    try {
+      ctx.scene.enter('logInAdminScene');
 
-    ctx.session.id = ctx.message.message_id;
-    for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
-      ctx.deleteMessage(i).catch((err) => {});
+      ctx.session.id = ctx.message.message_id;
+      for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
+        ctx.deleteMessage(i).catch((err) => {});
+      }
+    } catch (e) {
+      console.log(e);
     }
   });
 
-  bot.action('del', (ctx) => {
-    ctx.deleteMessage(ctx.update.callback_query.message.message_id);
+  bot.command('reset', (ctx) => {
+    try {
+      ctx.deleteMessage(ctx.message.message_id);
+      if (!!ctx.session?.oneMessegeId)
+        ctx.telegram
+          .editMessageText(
+            ctx.from.id,
+            ctx.session.oneMessegeId,
+            '',
+            resetDefaultValueText,
+            Markup.inlineKeyboard([
+              [{ text: 'Так', callback_data: 'reset_yes' }],
+              [{ text: 'Ні', callback_data: 'reset_no' }],
+            ]),
+          )
+          .catch((err) => {});
+      else
+        ctx.reply(
+          resetDefaultValueText,
+          Markup.inlineKeyboard([
+            [{ text: 'Так', callback_data: 'reset_yes' }],
+            [{ text: 'Ні', callback_data: 'reset_no' }],
+          ]),
+        );
+
+      ctx.session.id = ctx?.update?.callback_query?.message?.message_id || ctx.message.message_id;
+      for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
+        if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  bot.action('reset_yes', async (ctx) => {
+    Users.findOneAndUpdate(
+      { _id: ctx.from.id },
+      {
+        default_value: null,
+        default_role: null,
+      },
+    )
+      .clone()
+      .then((value) => {
+        ctx.answerCbQuery('Все пройшло успішно!\nЗаповни нові дані', { show_alert: true });
+        ctx.scene.enter('defaultValueScene');
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+
+  bot.action('reset_no', (ctx) => {
+    ctx.answerCbQuery();
+    ctx.scene.enter('welcomeScene');
   });
 
   bot.action('cbScene', (ctx) => {
+    ctx.answerCbQuery();
     ctx.scene.enter('cbScene');
   });
 
@@ -146,39 +209,101 @@ try {
     ctx;
   });
 
+  bot.action('Пн', (ctx) => {
+    ctx.session.day = 'Пн';
+    oneReaction(ctx);
+  });
+
+  bot.action('Вт', (ctx) => {
+    ctx.session.day = 'Вт';
+    oneReaction(ctx);
+  });
+
+  bot.action('Ср', (ctx) => {
+    ctx.session.day = 'Ср';
+    oneReaction(ctx);
+  });
+
+  bot.action('Чт', (ctx) => {
+    ctx.session.day = 'Чт';
+    oneReaction(ctx);
+  });
+
+  bot.action('Пт', (ctx) => {
+    ctx.session.day = 'Пт';
+    oneReaction(ctx);
+  });
+
+  bot.action('Сб', (ctx) => {
+    ctx.session.day = 'Сб';
+    oneReaction(ctx);
+  });
+
+  bot.action('Нд', (ctx) => {
+    ctx.session.day = 'Нд';
+    oneReaction(ctx);
+  });
+
+  bot.action(previousWeekText, (ctx) => {
+    oneReaction(ctx);
+  });
+
+  bot.action(nextWeekText, (ctx) => {
+    oneReaction(ctx);
+  });
+
+  bot.action(todayText, (ctx) => {
+    oneReaction(ctx);
+  });
+
+  bot.action(mainMenu, (ctx) => {
+    ctx.answerCbQuery();
+    ctx.scene.enter('welcomeScene');
+  });
+
+  bot.action(changeQueryBtnText, (ctx) => {
+    oneReaction(ctx);
+  });
+
+  bot.action(manualDateBtnEntry, (ctx) => {
+    oneReaction(ctx);
+  });
+
+  bot.action(allWeekBtnText, (ctx) => {
+    oneReaction(ctx);
+  });
+  bot.action('📌', (ctx) => {
+    oneReaction(ctx);
+  });
+
   bot.launch();
 } catch (e) {
   console.log();
 }
 
-async function mailing() {
-  Users.find((err, result) => {
-    if (err) console.log(err);
-    if (result.length != 0) {
-      for (let n = 0; n < result.length; n++) {
-        const element = result[n]._id;
-        bot.telegram.sendMessage(element, updateInfo + '\n\n' + clearHistory).catch((err) => {});
-      }
-    }
-  });
-  //
-  //mySQL
-  //
-  //   ids = [];
-  //   User.findAll()
-  //     .then((result) => {
-  //       for (let i = 0; i < result.length; i++) {
-  //         const el = result[i].dataValues.id;
-  //         ids.push(el);
-  //       }
-  //       if (ids.length != 0) {
-  //         for (let n = 0; n < ids.length; n++) {
-  //           const element = ids[n];
-  //           bot.telegram.sendMessage(element, updateInfo + '\n\n' + clearHistory).catch((err) => {});
-  //         }
-  //       }
-  //     })
-  //     .catch((err) => {});
+function oneReaction(ctx) {
+  ctx.session.time = 0;
+  Users.findById(ctx.from.id)
+    .then((result) => {
+      ctx.answerCbQuery();
+
+      ctx.session.oneMessegeId = ctx?.update?.callback_query?.message?.message_id;
+      ctx.session.default_value = result?.default_value;
+      ctx.session.default_role = result?.default_role;
+      ctx.session.default_mode = true;
+      ctx.session.weekShift = 0;
+
+      if (!ctx.session.default_value || !ctx.session.default_role)
+        ctx.scene.enter('defaultValueScene');
+
+      ctx.scene.enter('scheduleScene');
+    })
+    .catch((err) => {
+      ctx.reply(
+        'Щось пішло не так, спробуй ще(/start) раз або звернися по допомогу до творця бота',
+      );
+      console.log(err);
+    });
 }
 
 module.exports = { bot };
