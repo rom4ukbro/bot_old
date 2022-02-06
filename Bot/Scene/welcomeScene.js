@@ -7,7 +7,7 @@ const { welcomeText, choiceScheduleText, choiceProgressText } = require('../text
 const choiceKeyboard = Markup.inlineKeyboard([
   [{ text: choiceScheduleText, callback_data: choiceScheduleText }],
   [{ text: choiceProgressText, callback_data: choiceProgressText }],
-  // [{ text: 'Заяви', callback_data: 'statement' }],
+  [{ text: 'Заяви', callback_data: 'statement' }],
 ]);
 
 // ===================   Welcome scene   =========================
@@ -62,7 +62,7 @@ welcomeScene.action(choiceScheduleText, (ctx) => {
 
 welcomeScene.action(choiceProgressText, (ctx) => {
   try {
-    return ctx.answerCbQuery('Це поки що не доступно, бо немає підтримки від деканату :<');
+    // return ctx.answerCbQuery('Це поки що не доступно, бо немає підтримки від деканату :<');
     ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
     ctx.scene.enter('progressScene');
   } catch (e) {

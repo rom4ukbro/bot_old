@@ -81,31 +81,6 @@ async function parse(obj) {
   }
   let result = {};
   try {
-    // const nightmare = Nightmare({ show: false });
-
-    // await nightmare
-    //   .goto(scheduleURL)
-    //   .click(`#${obj.mode}`)
-    //   .type(`#${obj.mode}`, obj.value)
-    //   .type('input[name="sdate"]', sDate)
-    //   .type('input[name="edate"]', eDate)
-    //   .click(
-    //     '#wrap > div > div > div > div.page-header > form > div:nth-child(3) > div.col-md-6.col-xs-12 > button',
-    //   )
-    //   .wait('h4.visible-xs.text-center')
-    //   .evaluate(() => document.querySelector('body').innerHTML)
-    //   .end()
-    //   .then((response) => {
-    //     result = getData(response);
-    //     result.sDate = sDate;
-    //     result.eDate = eDate;
-    //     console.log(result);
-    //   })
-    //   .catch((error) => {
-    //     console.error('Search failed:', error);
-    //     result.error = true;
-    //   });
-
     var browser = await puppeteer.launch({
       // headless: false,
       defaultViewport: null,

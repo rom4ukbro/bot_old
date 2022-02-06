@@ -1,14 +1,23 @@
 const absenceLess = 'Відсутність на парах';
 const explanatoryNote = 'Пояснювальна записка';
 const individualTraining = 'Індивідуальний графік навчання';
+const distanceLearning = 'Дистанційне навчання';
+const chooseSpecialty = 'Переведення на іншу спеціальність';
+const deductionsStudent = 'Відрахування зa власним бажанням';
+const renewalStudent = 'Поновлення до складу студентів';
 
 const phone = 'Номер';
 const reason = 'Причина';
 const date = 'Дата відсутності';
+const deductionsDate = 'Дата відрахування';
+const renewalDate = 'Дата поновлення';
 const share = 'Поділитися';
 const statementNumB = 'Номер довідки';
 const photo = 'Скан документу';
 const done = 'Готово';
+const withSpecialty = 'З спеціальності';
+const course = 'Курс';
+const toSpecialty = 'На спеціальність';
 
 const photoText = 'Надішли фото або скан документу';
 const absenceDate = 'Напиши дати відсутності у форматі 01.01.2022-02.01.2022';
@@ -59,4 +68,13 @@ module.exports = {
   statementNumB,
   photoText,
   individualTraining,
+  distanceLearning,
+  chooseSpecialty,
+  withSpecialty,
+  toSpecialty,
+  deductionsStudent,
+  course,
+  deductionsDate,
+  renewalStudent,
+  renewalDate,
 };

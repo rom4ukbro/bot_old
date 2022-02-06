@@ -192,6 +192,275 @@ function getRequests(payload) {
         },
       },
     ],
+    'Дистанційне навчання': [
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{inGenitive}}',
+            matchCase: true,
+          },
+          replaceText: payload.inGenitive,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{phone}}',
+            matchCase: true,
+          },
+          replaceText: payload.phone,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{group}}',
+            matchCase: true,
+          },
+          replaceText: payload.group,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{reason}}',
+            matchCase: true,
+          },
+          replaceText: payload.reason,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{createDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.createDate,
+        },
+      },
+    ],
+    'Переведення на іншу спеціальність': [
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{inGenitive}}',
+            matchCase: true,
+          },
+          replaceText: payload.inGenitive,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{phone}}',
+            matchCase: true,
+          },
+          replaceText: payload.phone,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{group}}',
+            matchCase: true,
+          },
+          replaceText: payload.group,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{withForm}}',
+            matchCase: true,
+          },
+          replaceText: payload.withForm,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{toForm}}',
+            matchCase: true,
+          },
+          replaceText: payload.toForm,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{withSpecialty}}',
+            matchCase: true,
+          },
+          replaceText: payload.withSpecialty,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{toSpecialty}}',
+            matchCase: true,
+          },
+          replaceText: payload.toSpecialty,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{createDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.createDate,
+        },
+      },
+    ],
+    'Відрахування зa власним бажанням': [
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{inGenitive}}',
+            matchCase: true,
+          },
+          replaceText: payload.inGenitive,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{phone}}',
+            matchCase: true,
+          },
+          replaceText: payload.phone,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{group}}',
+            matchCase: true,
+          },
+          replaceText: payload.group,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{withForm}}',
+            matchCase: true,
+          },
+          replaceText: payload.withForm,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{withCourse}}',
+            matchCase: true,
+          },
+          replaceText: payload.withCourse,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{withSpecialty}}',
+            matchCase: true,
+          },
+          replaceText: payload.withSpecialty,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{absenceDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.absenceDate,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{createDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.createDate,
+        },
+      },
+    ],
+    'Поновлення до складу студентів': [
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{inGenitive}}',
+            matchCase: true,
+          },
+          replaceText: payload.inGenitive,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{phone}}',
+            matchCase: true,
+          },
+          replaceText: payload.phone,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{group}}',
+            matchCase: true,
+          },
+          replaceText: payload.group,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{withForm}}',
+            matchCase: true,
+          },
+          replaceText: payload.withForm,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{withCourse}}',
+            matchCase: true,
+          },
+          replaceText: payload.withCourse,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{withSpecialty}}',
+            matchCase: true,
+          },
+          replaceText: payload.withSpecialty,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{absenceDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.absenceDate,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{createDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.createDate,
+        },
+      },
+    ],
   };
   return req[payload.docName];
 }

@@ -1,6 +1,8 @@
 const fs = require('fs');
 const readline = require('readline-sync');
-const { google } = require('googleapis');
+const Docs = require('@googleapis/docs');
+const Drive = require('@googleapis/drive');
+const Sheets = require('@googleapis/sheets');
 
 const { getRequests } = require('./requests');
 
@@ -15,13 +17,17 @@ const TOKEN_PATH = __dirname + '\\token.json';
 const STATEMENT_FOLDER_ID = process.env.STATEMENT_FOLDER_ID;
 
 // (async () => {
-//   console.log(await googleApis('checkPhone', { phone: '+380959369733' }));
+//   try {
+//     console.log(await googleApis('checkPhone', { phone: '+380959369733' }));
+//   } catch (e) {
+//     console.log(e);
+//   }
 // })();
-// googleApis('checkPhone', { phone: '+380959369733' });
 
 /**
  *
  * @param {String} mode Work mode
+ *
  * @param {Object} payload The Payload
  */
 async function googleApis(mode, payload) {
@@ -40,15 +46,16 @@ async function googleApis(mode, payload) {
 
 async function authorize(credentials, callback, payload) {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
-  const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+  const oAuth2Client = new Docs.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
 
   try {
-    var token = JSON.parse(fs.readFileSync(TOKEN_PATH));
+    var tokens = JSON.parse(fs.readFileSync(TOKEN_PATH));
   } catch (err) {
     return getAccessToken(oAuth2Client, callback, payload);
   }
-
-  oAuth2Client.setCredentials(token.tokens);
+  try {
+    oAuth2Client.setCredentials(tokens);
+  } catch (e) {}
 
   return await callback(oAuth2Client, payload);
 }
@@ -63,11 +70,11 @@ async function getAccessToken(oAuth2Client, callback, payload) {
 
   const code = readline.question('Enter the code from that page here: ');
 
-  const token = await oAuth2Client.getToken(code);
+  const tokens = await oAuth2Client.getToken(code);
 
-  oAuth2Client.setCredentials(token);
+  oAuth2Client.setCredentials(tokens);
 
-  fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
+  fs.writeFile(TOKEN_PATH, JSON.stringify(tokens.tokens), (err) => {
     if (err) return console.error(err);
     console.log('Token stored to', TOKEN_PATH);
   });
@@ -76,8 +83,8 @@ async function getAccessToken(oAuth2Client, callback, payload) {
 }
 
 async function generateDocs(auth, payload) {
-  const docs = google.docs({ version: 'v1', auth });
-  const drive = google.drive({ version: 'v3', auth });
+  const docs = Docs.docs({ version: 'v1', auth });
+  const drive = Drive.drive({ version: 'v3', auth });
 
   const sourceId = await getFilesId(auth, payload.docName);
 
@@ -123,7 +130,7 @@ async function generateDocs(auth, payload) {
 }
 
 async function checkPhone(auth, payload) {
-  const sheets = google.sheets({ version: 'v4', auth });
+  const sheets = Sheets.sheets({ version: 'v4', auth });
   const { phone } = payload;
 
   id = await getFilesId(auth, 'Список студентів');
@@ -162,7 +169,7 @@ async function checkPhone(auth, payload) {
 
 function getFilesId(auth, fileName) {
   return new Promise((resolve, reject) => {
-    const drive = google.drive({ version: 'v3', auth });
+    const drive = Drive.drive({ version: 'v3', auth });
 
     drive.files.list(
       {

@@ -27,10 +27,14 @@ const {
 } = require('./Scene/adminScene');
 const { defaultValueScene } = require('./Scene/defaultValueScene');
 const { cbScene } = require('./Scene/cbScene.js');
-// const { statementScene } = require('./Scene/statementScene/statementScene');
-// const { statement1Scene } = require('./Scene/statementScene/statement1Scene');
-// const { statement2Scene } = require('./Scene/statementScene/statement2Scene');
-// const { statement3Scene } = require('./Scene/statementScene/statement3Scene');
+const { statementScene } = require('./Scene/statementScene/statementScene');
+const { statement1Scene } = require('./Scene/statementScene/statement1Scene');
+const { statement2Scene } = require('./Scene/statementScene/statement2Scene');
+const { statement3Scene } = require('./Scene/statementScene/statement3Scene');
+const { statement4Scene } = require('./Scene/statementScene/statement4Scene');
+const { statement5Scene } = require('./Scene/statementScene/statement5Scene');
+const { statement6Scene } = require('./Scene/statementScene/statement6Scene');
+const { statement7Scene } = require('./Scene/statementScene/statement7Scene');
 
 const {
   resetDefaultValueText,
@@ -68,10 +72,14 @@ const stage = new Stage([
   cbScene,
   defaultValueScene,
   mailingUpdateScene,
-  // statementScene,
-  // statement1Scene,
-  // statement2Scene,
-  // statement3Scene,
+  statementScene,
+  statement1Scene,
+  statement2Scene,
+  statement3Scene,
+  statement4Scene,
+  statement5Scene,
+  statement6Scene,
+  statement7Scene,
 ]);
 
 const bot = new Telegraf(token);

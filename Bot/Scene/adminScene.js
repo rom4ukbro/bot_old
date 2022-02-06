@@ -44,7 +44,7 @@ logInAdminScene.enter((ctx) => {
       const el = admins[i];
       if (ctx.chat.id == el || ctx.chat?.username == el) return ctx.scene.enter('adminPanelScene');
     }
-    ctx.scene.enter('chooseScene');
+    ctx.scene.enter('welcomeScene');
     return ctx.answerCbQuery('Ти не маєш доступу!', { show_alert: true });
   } catch (e) {
     console.log(e);
@@ -176,11 +176,13 @@ mailingSimpleScene.enter((ctx) => {
 });
 
 mailingSimpleScene.hears('ТАК', async (ctx) => {
+  sendMessages = ids.length;
   try {
     ctx.deleteMessage(ctx.message.message_id).catch((err) => {});
     ctx.deleteMessage(ctx.session.adId).catch((err) => {});
     ctx.deleteMessage(ctx.session.delMess).catch((err) => {});
-    for (let n = 0; n < ids.length; n++) {
+
+    for (let n = ids.length; n > 0; n--) {
       const element = ids[n];
 
       ctx.telegram
@@ -191,7 +193,17 @@ mailingSimpleScene.hears('ТАК', async (ctx) => {
             inline_keyboard: [[{ text: 'Зрозуміло', callback_data: 'del' }]],
           },
         })
-        .catch((err) => {});
+        .catch((err) => {
+          sendMessage -= 1;
+        });
+
+      setTimeout(() => {
+        ctx.telegram.sendMessage(
+          '-1001378618059',
+          `Повідомлення отримали ${sendMessages} користувачів`,
+          { parse_mode: 'Markdown' },
+        );
+      }, 10000);
     }
 
     delete ctx.session.delMess;
@@ -259,11 +271,13 @@ mailingCbScene.enter((ctx) => {
 });
 
 mailingCbScene.hears('ТАК', async (ctx) => {
+  sendMessages = ids.length;
   try {
     ctx.deleteMessage(ctx.message.message_id).catch((err) => {});
     ctx.deleteMessage(ctx.session.adId).catch((err) => {});
     ctx.deleteMessage(ctx.session.delMess).catch((err) => {});
-    for (let n = 0; n < ids.length; n++) {
+
+    for (let n = ids.length; n > 0; n--) {
       const element = ids[n];
 
       ctx.telegram
@@ -274,8 +288,17 @@ mailingCbScene.hears('ТАК', async (ctx) => {
             inline_keyboard: [[{ text: 'Зрозуміло', callback_data: 'del' }]],
           },
         })
-        .catch((err) => {});
+        .catch((err) => {
+          sendMessages -= 1;
+        });
     }
+    setTimeout(() => {
+      ctx.telegram.sendMessage(
+        '-1001378618059',
+        `Повідомлення отримали ${sendMessages} користувачів`,
+        { parse_mode: 'Markdown' },
+      );
+    }, 10000);
 
     delete ctx.session.delMess;
     delete ctx.session.text;
@@ -348,17 +371,29 @@ mailingUpdateScene.enter((ctx) => {
   }
 });
 
-mailingUpdateScene.hears('ТАК', async (ctx) => {
+mailingUpdateScene.hears('ТАК', (ctx) => {
+  sendMessages = ids.length;
+
   try {
     ctx.deleteMessage(ctx.message.message_id).catch((err) => {});
     ctx.deleteMessage(ctx.session.adId).catch((err) => {});
 
     for (let n = 0; n < ids.length; n++) {
       const element = ids[n];
-      ctx.telegram.sendMessage(element, updateInfo + '\n\n' + clearHistory).catch((err) => {});
+      ctx.telegram.sendMessage(element, updateInfo + '\n\n' + clearHistory).catch((err) => {
+        sendMessages -= 1;
+      });
     }
 
-    await ctx.scene.enter('adminPanelScene');
+    setTimeout(() => {
+      ctx.telegram.sendMessage(
+        '-1001378618059',
+        `Повідомлення отримали ${sendMessages} користувачів`,
+        { parse_mode: 'Markdown' },
+      );
+    }, 10000);
+
+    ctx.scene.enter('adminPanelScene');
   } catch (e) {
     console.log(e);
   }

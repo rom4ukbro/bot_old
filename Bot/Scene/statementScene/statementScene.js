@@ -1,6 +1,14 @@
 const { Markup, Scenes } = require('telegraf');
 
-const { absenceLess, explanatoryNote, individualTraining } = require('./statementText');
+const {
+  absenceLess,
+  explanatoryNote,
+  individualTraining,
+  distanceLearning,
+  chooseSpecialty,
+  deductionsStudent,
+  renewalStudent,
+} = require('./statementText');
 
 // ===================   keyboard   =========================
 
@@ -9,6 +17,10 @@ const contactKeyboard = Markup.inlineKeyboard(
     { text: absenceLess, callback_data: absenceLess },
     { text: explanatoryNote, callback_data: explanatoryNote },
     { text: individualTraining, callback_data: individualTraining },
+    { text: distanceLearning, callback_data: distanceLearning },
+    { text: chooseSpecialty, callback_data: chooseSpecialty },
+    { text: deductionsStudent, callback_data: deductionsStudent },
+    { text: renewalStudent, callback_data: renewalStudent },
     { text: 'Назад', callback_data: 'back' },
   ],
   {
@@ -41,6 +53,26 @@ statementScene.action(explanatoryNote, (ctx) => {
 statementScene.action(individualTraining, (ctx) => {
   ctx.answerCbQuery();
   return ctx.scene.enter('statement3Scene');
+});
+
+statementScene.action(distanceLearning, (ctx) => {
+  ctx.answerCbQuery();
+  return ctx.scene.enter('statement4Scene');
+});
+
+statementScene.action(chooseSpecialty, (ctx) => {
+  ctx.answerCbQuery();
+  return ctx.scene.enter('statement5Scene');
+});
+
+statementScene.action(deductionsStudent, (ctx) => {
+  ctx.answerCbQuery();
+  return ctx.scene.enter('statement6Scene');
+});
+
+statementScene.action(renewalStudent, (ctx) => {
+  ctx.answerCbQuery();
+  return ctx.scene.enter('statement7Scene');
 });
 
 statementScene.action('back', (ctx) => {

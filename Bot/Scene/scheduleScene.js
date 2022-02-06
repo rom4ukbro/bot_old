@@ -111,6 +111,8 @@ scheduleScene.enter(async (ctx) => {
         ctx.session.day =
           moment().add(1, 'day').format('dd').charAt(0).toUpperCase() +
           moment().add(1, 'day').format('dd').charAt(1);
+
+        if (ctx.session.day == 'Пн') ctx.session.weekShift += 1;
       } else
         ctx.session.day =
           moment().format('dd').charAt(0).toUpperCase() + moment().format('dd').charAt(1);
