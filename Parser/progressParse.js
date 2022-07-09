@@ -18,7 +18,7 @@ async function progressParse(obj) {
     defaultViewport: null,
     args: ['--start-maximized'],
   });
-  const page = await browser.newPage();
+  const page = (await browser.pages())[0];
   try {
     // перехід на сайт
     await page.goto(scheduleURL);
@@ -28,11 +28,11 @@ async function progressParse(obj) {
     await page.click('#wrap > div > div > form > div:nth-child(10) > div.col-md-9.col-xs-12 > a');
 
     // написання логіну в гугл
-    await page.waitForNavigation();
+    await page.waitForSelector('#identifierId');
     await page.type(`#identifierId`, obj.login);
     await page.click('#identifierNext > div > button');
 
-    //  перевірка на правильність паролю
+    //  перевірка на правильність логіну
     try {
       await page.waitForSelector(
         '#view_container > div > div > div.pwWryf.bxPAYd > div > div.WEQkZc > div > form > span > section > div > div > div.d2CFce.cDSmF.cxMOTc > div > div.LXRPh > div.dEOOab.RxsGPe > div',

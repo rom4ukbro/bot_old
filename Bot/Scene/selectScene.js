@@ -8,8 +8,8 @@ const {
   cantFindQuery,
 } = require('../text');
 const { getArrTeacher, getArrGroup } = require('../../Parser/getGroupAndTeacher.js');
-
 const { findGroup, findTeacher } = require('../../Parser/search.js');
+const { deleteMessage } = require('../helpers');
 
 // ===================   Student scene   =========================
 
@@ -33,10 +33,7 @@ studentScene.command('start', async (ctx) => {
 
     await ctx.scene.enter('chooseScene');
 
-    ctx.session.id = ctx.message.message_id;
-    for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
-      ctx.deleteMessage(i).catch((err) => {});
-    }
+    deleteMessage(ctx, ctx.message.message_id)
   } catch (e) {
     console.log(e);
   }
@@ -68,7 +65,7 @@ teacherScene.command('start', async (ctx) => {
 
     ctx.session.id = ctx.message.message_id;
     for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
-      ctx.deleteMessage(i).catch((err) => {});
+      ctx.deleteMessage(i).catch((err) => { });
     }
   } catch (e) {
     console.log(e);
@@ -86,13 +83,13 @@ function searchFnc(mode, ctx) {
     ctx.session.mode = mode;
     ctx.session.id = ctx.message.message_id;
     for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
-      if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
+      if (i != ctx.session.oneMessageId) ctx.deleteMessage(i).catch((err) => { });
     }
     if (ctx.session.searchArr[0] === 'error') {
-      ctx.deleteMessage(ctx.message.message_id);
+      ctx.deleteMessage(ctx.message.message_id).catch((e) => { });
       return ctx.telegram.editMessageText(
         ctx.from.id,
-        ctx.session.oneMessegeId,
+        ctx.session.oneMessageId,
         '',
         'Сталася помилка з сайтом, спробуй пізніше.\nНатисни /start',
       );
@@ -107,17 +104,17 @@ function searchFnc(mode, ctx) {
     if (ctx.session.resultArr.length === 0) {
       ctx.session.id = ctx.message.message_id;
       for (i = ctx.session.id; i >= ctx.session.id - 100; i--) {
-        if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
+        if (i != ctx.session.oneMessageId) ctx.deleteMessage(i).catch((err) => { });
       }
       return ctx.telegram
-        .editMessageText(ctx.from.id, ctx.session.oneMessegeId, '', cantFindQuery)
-        .catch((err) => {});
+        .editMessageText(ctx.from.id, ctx.session.oneMessageId, '', cantFindQuery)
+        .catch((err) => { });
     }
     if (ctx.session.resultArr.length === 1) {
       ctx.session.value = ctx.session.resultArr[0];
       ctx.session.id = ctx.message.message_id;
       for (i = ctx.session.id; i >= ctx.session.id - 100; i--) {
-        if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
+        if (i != ctx.session.oneMessageId) ctx.deleteMessage(i).catch((err) => { });
       }
       return ctx.scene.enter('scheduleScene');
     }

@@ -42,7 +42,7 @@ progressScene.enter(async (ctx) => {
 
       ctx.telegram.editMessageText(
         ctx.from.id,
-        ctx.session.oneMessegeId,
+        ctx.session.oneMessageId,
         '',
         `Оцінки ${ctx.session.progress.name}\n\n${toMessage(
           ctx.session.progress.data,
@@ -59,9 +59,7 @@ progressScene.enter(async (ctx) => {
       });
     }
 
-    for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
-      ctx.deleteMessage(i).catch((err) => {});
-    }
+    deleteMessage(ctx, ctx.session.id)
   } catch (e) {
     console.log(e);
   }
@@ -70,19 +68,15 @@ progressScene.enter(async (ctx) => {
 progressScene.command('start', async (ctx) => {
   await ctx.scene.enter('welcomeScene');
 
-  ctx.session.id = ctx.message.message_id;
-
-  for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
-    ctx.deleteMessage(i).catch((err) => {});
-  }
-  ctx.deleteMessage(ctx.session.oneMessegeId).catch((err) => {});
+  deleteMessage(ctx, ctx.message.message_id, ctx.session.oneMessageId)
+  ctx.deleteMessage(ctx.session.oneMessageId).catch((err) => { });
   ctx.session.progress = null;
 });
 
 progressScene.on('text', async (ctx) => {
-  ctx.deleteMessage(ctx.message.message_id);
+  ctx.deleteMessage(ctx.message.message_id).catch((e) => { });
 
-  ctx.telegram.editMessageText(ctx.from.id, ctx.session.oneMessegeId, '', loadProgress);
+  ctx.telegram.editMessageText(ctx.from.id, ctx.session.oneMessageId, '', loadProgress);
   try {
     ctx.session.payload = ctx.message.text.split(' ');
 
@@ -91,7 +85,7 @@ progressScene.on('text', async (ctx) => {
     if (ctx.session.payload.length > 2) {
       return ctx.telegram.editMessageText(
         ctx.from.id,
-        ctx.session.oneMessegeId,
+        ctx.session.oneMessageId,
         '',
         'Надто багато слів\nСпробуй ще раз',
         { reply_markup: { inline_keyboard: backKeyboard } },
@@ -100,7 +94,7 @@ progressScene.on('text', async (ctx) => {
     if (ctx.session.payload.length < 2) {
       return ctx.telegram.editMessageText(
         ctx.from.id,
-        ctx.session.oneMessegeId,
+        ctx.session.oneMessageId,
         '',
         'Надто мало слів, напевно ти написав(ла) тільки логін\nСпробуй ще раз',
         { reply_markup: { inline_keyboard: backKeyboard } },
@@ -114,7 +108,7 @@ progressScene.on('text', async (ctx) => {
     if (ctx.session.progress.errorLogin) {
       return ctx.telegram.editMessageText(
         ctx.from.id,
-        ctx.session.oneMessegeId,
+        ctx.session.oneMessageId,
         '',
         errorLoginText,
         { reply_markup: { inline_keyboard: backKeyboard } },
@@ -123,7 +117,7 @@ progressScene.on('text', async (ctx) => {
     if (ctx.session.progress.errorPass) {
       return ctx.telegram.editMessageText(
         ctx.from.id,
-        ctx.session.oneMessegeId,
+        ctx.session.oneMessageId,
         '',
         errorPassText,
         { reply_markup: { inline_keyboard: backKeyboard } },
@@ -132,7 +126,7 @@ progressScene.on('text', async (ctx) => {
     if (ctx.session.progress.error) {
       return ctx.telegram.editMessageText(
         ctx.from.id,
-        ctx.session.oneMessegeId,
+        ctx.session.oneMessageId,
         '',
         errorProgressText,
         { reply_markup: { inline_keyboard: backKeyboard } },
@@ -143,7 +137,7 @@ progressScene.on('text', async (ctx) => {
 
     ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       '',
       `Оцінки ${ctx.session.progress.name}\n\n${toMessage(
         ctx.session.progress.data,
@@ -174,7 +168,7 @@ progressScene.action(progressTextButton, async (ctx) => {
     );
     ctx.answerCbQuery();
     delete ctx.session.progress;
-  } catch (e) {}
+  } catch (e) { }
 });
 
 progressScene.action(debtsTextButton, async (ctx) => {
@@ -201,7 +195,7 @@ progressScene.action(debtsTextButton, async (ctx) => {
       choiceKeyboard,
     );
     delete ctx.session.progress;
-  } catch (e) {}
+  } catch (e) { }
 });
 
 progressScene.action(mainMenu, async (ctx) => {
@@ -209,7 +203,7 @@ progressScene.action(mainMenu, async (ctx) => {
     await ctx.scene.enter('welcomeScene');
     ctx.answerCbQuery();
     ctx.session.progress = null;
-  } catch (e) {}
+  } catch (e) { }
 });
 
 progressScene.action('help', (ctx) => ctx.answerCbQuery(progressHelpText, { show_alert: true }));

@@ -15,6 +15,7 @@ const {
   review,
   phoneNotFound,
   fieldNotFill,
+  statementEnter,
   phone,
   reason,
   date,
@@ -34,7 +35,7 @@ const {
 const fieldKeyboard = [
   { text: phone, callback_data: phone },
   { text: reason, callback_data: reason },
-  { text: statementNumB, callback_data: statementNumB },
+  // { text: statementNumB, callback_data: statementNumB },
   { text: photo, callback_data: photo },
   { text: done, callback_data: done },
 
@@ -70,10 +71,7 @@ statement3Scene.command('/start', (ctx) => {
 statement3Scene.enter((ctx) => {
   try {
     ctx.session.keyboard = JSON.parse(JSON.stringify(fieldKeyboard));
-    ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
-      Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
-    );
+    ctx.editMessageText(statementEnter, Markup.inlineKeyboard(ctx.session.keyboard, { columns }));
     ctx.session.statementData = {};
     ctx.session.statementData.docName = ctx?.update?.callback_query?.data;
     ctx.session.statementData.createDate = moment().format('L');
@@ -133,9 +131,9 @@ statement3Scene.on('contact', async (ctx) => {
 
     return ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       null,
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -160,9 +158,9 @@ statement3Scene.action('reasonJob', (ctx) => {
     ctx.session.keyboard[1].text = fieldKeyboard[1].text + '✅';
     return ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       null,
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -178,9 +176,9 @@ statement3Scene.action(reasonChild, (ctx) => {
     ctx.session.keyboard[1].text = fieldKeyboard[1].text + '✅';
     return ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       null,
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -217,18 +215,18 @@ statement3Scene.on('text', (ctx) => {
         return ctx.telegram
           .editMessageText(
             ctx.from.id,
-            ctx.session.oneMessegeId,
+            ctx.session.oneMessageId,
             null,
             'Введені дані не відповідають формату',
             backKeyboard,
           )
-          .catch((err) => {});
+          .catch((err) => { });
       }
       if (!moment(statementNum[0], 'DD.MM.YYYY').isValid()) {
         ctx.deleteMessage(ctx.message.message_id);
         return ctx.telegram
-          .editMessageText(ctx.from.id, ctx.session.oneMessegeId, null, dateError, backKeyboard)
-          .catch((err) => {});
+          .editMessageText(ctx.from.id, ctx.session.oneMessageId, null, dateError, backKeyboard)
+          .catch((err) => { });
       }
 
       ctx.session.statementData.add = `довідку з місця роботи від date № num`
@@ -245,18 +243,18 @@ statement3Scene.on('text', (ctx) => {
         return ctx.telegram
           .editMessageText(
             ctx.from.id,
-            ctx.session.oneMessegeId,
+            ctx.session.oneMessageId,
             null,
             'Введені дані не відповідають формату',
             backKeyboard,
           )
-          .catch((err) => {});
+          .catch((err) => { });
       }
       if (!moment(statementNum[0], 'DD.MM.YYYY').isValid()) {
         ctx.deleteMessage(ctx.message.message_id);
         return ctx.telegram
-          .editMessageText(ctx.from.id, ctx.session.oneMessegeId, null, dateError, backKeyboard)
-          .catch((err) => {});
+          .editMessageText(ctx.from.id, ctx.session.oneMessageId, null, dateError, backKeyboard)
+          .catch((err) => { });
       }
       ctx.session.statementData.add = `копію свідоцтва про народження від date серія series № num`
         .replace('date', statementNum[0])
@@ -270,9 +268,9 @@ statement3Scene.on('text', (ctx) => {
     }
     return ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       null,
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -302,9 +300,9 @@ statement3Scene.on('photo', async (ctx) => {
   ctx.session.photoId = ctx.message.message_id;
   return ctx.telegram.editMessageText(
     ctx.from.id,
-    ctx.session.oneMessegeId,
+    ctx.session.oneMessageId,
     null,
-    'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+    statementEnter,
     Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
   );
 });
@@ -334,6 +332,7 @@ statement3Scene.action(done, (ctx) => {
 
 statement3Scene.action('yes', async (ctx) => {
   try {
+    ctx.answerCbQuery('Заява створюється, зачекай', { show_alert: true });
     const result = await googleApis('generateDocs', ctx.session.statementData);
 
     ctx.deleteMessage(ctx.session.photoId);
@@ -352,7 +351,6 @@ statement3Scene.action('yes', async (ctx) => {
         Markup.inlineKeyboard([Markup.button.callback(mainMenu, 'mainMenu')]),
       );
     }
-    ctx.answerCbQuery();
   } catch (e) {
     console.log(e);
   }
@@ -362,10 +360,10 @@ statement3Scene.action('no', (ctx) => {
   try {
     ctx.answerCbQuery('Можеш виправити те, що не правильно', { show_alert: true });
     return ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
-  } catch (e) {}
+  } catch (e) { }
 });
 
 statement3Scene.action('statement', (ctx) => {
@@ -381,7 +379,7 @@ statement3Scene.action('back', (ctx) => {
   try {
     ctx.answerCbQuery();
     return ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {

@@ -8,6 +8,9 @@ const {
   chooseSpecialty,
   deductionsStudent,
   renewalStudent,
+  rearrangementTest,
+  academicLeave,
+  transferSession,
 } = require('./statementText');
 
 // ===================   keyboard   =========================
@@ -21,6 +24,9 @@ const contactKeyboard = Markup.inlineKeyboard(
     { text: chooseSpecialty, callback_data: chooseSpecialty },
     { text: deductionsStudent, callback_data: deductionsStudent },
     { text: renewalStudent, callback_data: renewalStudent },
+    { text: rearrangementTest, callback_data: rearrangementTest },
+    { text: academicLeave, callback_data: academicLeave },
+    { text: transferSession, callback_data: transferSession },
     { text: 'Назад', callback_data: 'back' },
   ],
   {
@@ -73,6 +79,21 @@ statementScene.action(deductionsStudent, (ctx) => {
 statementScene.action(renewalStudent, (ctx) => {
   ctx.answerCbQuery();
   return ctx.scene.enter('statement7Scene');
+});
+
+statementScene.action(rearrangementTest, (ctx) => {
+  ctx.answerCbQuery();
+  return ctx.scene.enter('statement8Scene');
+});
+
+statementScene.action(academicLeave, (ctx) => {
+  ctx.answerCbQuery();
+  return ctx.scene.enter('statement9Scene');
+});
+
+statementScene.action(transferSession, (ctx) => {
+  ctx.answerCbQuery();
+  return ctx.scene.enter('statement10Scene');
 });
 
 statementScene.action('back', (ctx) => {

@@ -15,6 +15,7 @@ const {
   review,
   phoneNotFound,
   fieldNotFill,
+  statementEnter,
   phone,
   date,
   share,
@@ -84,10 +85,7 @@ statement7Scene.command('/start', (ctx) => {
 statement7Scene.enter((ctx) => {
   try {
     ctx.session.keyboard = JSON.parse(JSON.stringify(fieldKeyboard));
-    ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
-      Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
-    );
+    ctx.editMessageText(statementEnter, Markup.inlineKeyboard(ctx.session.keyboard, { columns }));
     ctx.session.statementData = {};
     ctx.session.statementData.docName = ctx?.update?.callback_query?.data;
     ctx.session.statementData.createDate = moment().format('L');
@@ -147,9 +145,9 @@ statement7Scene.on('contact', async (ctx) => {
 
     return ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       null,
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -189,8 +187,8 @@ statement7Scene.on('text', (ctx) => {
       if (!moment(absenceDate, 'DD.MM.YYYY').isValid()) {
         ctx.deleteMessage(ctx.message.message_id);
         return ctx.telegram
-          .editMessageText(ctx.from.id, ctx.session.oneMessegeId, null, dateError, backKeyboard)
-          .catch((err) => {});
+          .editMessageText(ctx.from.id, ctx.session.oneMessageId, null, dateError, backKeyboard)
+          .catch((err) => { });
       }
 
       ctx.session.statementData.absenceDate = absenceDate;
@@ -203,9 +201,9 @@ statement7Scene.on('text', (ctx) => {
     delete ctx.session.field;
     return ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       null,
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -237,6 +235,7 @@ statement7Scene.action(done, (ctx) => {
 
 statement7Scene.action('yes', async (ctx) => {
   try {
+    ctx.answerCbQuery('Заява створюється, зачекай', { show_alert: true });
     const result = await googleApis('generateDocs', ctx.session.statementData);
 
     if (result.status == 'OK') {
@@ -253,7 +252,6 @@ statement7Scene.action('yes', async (ctx) => {
         Markup.inlineKeyboard([Markup.button.callback(mainMenu, 'mainMenu')]),
       );
     }
-    ctx.answerCbQuery();
   } catch (e) {
     console.log(e);
   }
@@ -263,10 +261,10 @@ statement7Scene.action('no', (ctx) => {
   try {
     ctx.answerCbQuery('Можеш виправити те, що не правильно', { show_alert: true });
     return ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
-  } catch (e) {}
+  } catch (e) { }
 });
 
 statement7Scene.action('statement', (ctx) => {
@@ -282,7 +280,7 @@ statement7Scene.action('back', (ctx) => {
   try {
     ctx.answerCbQuery();
     return ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -299,43 +297,45 @@ statement7Scene.action('mainMenu', (ctx) => {
 });
 
 statement7Scene.on('callback_query', (ctx) => {
-  ctx.answerCbQuery();
+  try {
+    ctx.answerCbQuery();
 
-  if (ctx.session.field == withSpecialty) {
-    if (!ctx.session.statementData.withCourse)
-      ctx.session.statementData.withCourse = ctx.callbackQuery.data;
-    else if (!ctx.session.statementData.withForm)
-      ctx.session.statementData.withForm = ctx.callbackQuery.data;
-    else if (!ctx.session.statementData.withSpecialty)
-      ctx.session.statementData.withSpecialty = ctx.callbackQuery.data;
+    if (ctx.session.field == withSpecialty) {
+      if (!ctx.session.statementData.withCourse)
+        ctx.session.statementData.withCourse = ctx.callbackQuery.data;
+      else if (!ctx.session.statementData.withForm)
+        ctx.session.statementData.withForm = ctx.callbackQuery.data;
+      else if (!ctx.session.statementData.withSpecialty)
+        ctx.session.statementData.withSpecialty = ctx.callbackQuery.data;
 
-    if (
-      ctx.session.statementData.withCourse &&
-      !ctx.session.statementData.withForm &&
-      !ctx.session.statementData.withSpecialty
-    )
-      ctx.editMessageText(withSpecialty, formKeyboard);
-    else if (
-      ctx.session.statementData.withCourse &&
-      ctx.session.statementData.withForm &&
-      !ctx.session.statementData.withSpecialty
-    ) {
-      ctx.editMessageText(withSpecialty, specialtyKeyboard);
-    } else if (
-      ctx.session.statementData.withCourse &&
-      ctx.session.statementData.withForm &&
-      ctx.session.statementData.withSpecialty
-    ) {
-      ctx.session.keyboard[1].text = fieldKeyboard[1].text + '✅';
+      if (
+        ctx.session.statementData.withCourse &&
+        !ctx.session.statementData.withForm &&
+        !ctx.session.statementData.withSpecialty
+      )
+        ctx.editMessageText(withSpecialty, formKeyboard);
+      else if (
+        ctx.session.statementData.withCourse &&
+        ctx.session.statementData.withForm &&
+        !ctx.session.statementData.withSpecialty
+      ) {
+        ctx.editMessageText(withSpecialty, specialtyKeyboard);
+      } else if (
+        ctx.session.statementData.withCourse &&
+        ctx.session.statementData.withForm &&
+        ctx.session.statementData.withSpecialty
+      ) {
+        ctx.session.keyboard[1].text = fieldKeyboard[1].text + '✅';
 
-      delete ctx.session.field;
+        delete ctx.session.field;
 
-      ctx.editMessageText(
-        'Заповни всі поля і тоді натисни готово, щоб створити заяву',
-        Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
-      );
+        ctx.editMessageText(
+          statementEnter,
+          Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
+        );
+      }
     }
-  }
+  } catch (error) { }
 });
 
 statement7Scene.on('message', (ctx) => {

@@ -12,7 +12,7 @@ const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets.readonly',
 ];
 
-const TOKEN_PATH = __dirname + '\\token.json';
+const TOKEN_PATH = __dirname + '/token.json';
 
 const STATEMENT_FOLDER_ID = process.env.STATEMENT_FOLDER_ID;
 
@@ -39,13 +39,12 @@ async function googleApis(mode, payload) {
       callback = generateDocs;
   }
 
-  const credentials = fs.readFileSync(__dirname + '\\credentials.json');
-
-  return await authorize(JSON.parse(credentials), callback, payload);
+  return await authorize(callback, payload);
 }
 
-async function authorize(credentials, callback, payload) {
-  const { client_secret, client_id, redirect_uris } = credentials.installed;
+async function authorize(callback, payload) {
+  const credentials = fs.readFileSync(__dirname + '/credentials.json');
+  const { client_secret, client_id, redirect_uris } = JSON.parse(credentials).installed;
   const oAuth2Client = new Docs.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
 
   try {
@@ -55,7 +54,9 @@ async function authorize(credentials, callback, payload) {
   }
   try {
     oAuth2Client.setCredentials(tokens);
-  } catch (e) {}
+  } catch (e) {
+    return { status: 'failed' };
+  }
 
   return await callback(oAuth2Client, payload);
 }
@@ -180,7 +181,7 @@ function getFilesId(auth, fileName) {
       (err, res) => {
         if (err) {
           console.log('The drive API returned an error: ' + err);
-          return reject(null);
+          return reject({ status: 'failed' });
         }
         const files = res.data.files;
         if (files?.length) {
@@ -189,7 +190,7 @@ function getFilesId(auth, fileName) {
           });
         } else {
           console.log('No files found.');
-          return reject(null);
+          return reject({ status: 'failed' });
         }
       },
     );

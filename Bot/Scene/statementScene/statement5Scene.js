@@ -15,6 +15,7 @@ const {
   review,
   phoneNotFound,
   fieldNotFill,
+  statementEnter,
   phone,
   date,
   share,
@@ -75,10 +76,7 @@ statement5Scene.command('/start', (ctx) => {
 statement5Scene.enter((ctx) => {
   try {
     ctx.session.keyboard = JSON.parse(JSON.stringify(fieldKeyboard));
-    ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
-      Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
-    );
+    ctx.editMessageText(statementEnter, Markup.inlineKeyboard(ctx.session.keyboard, { columns }));
     ctx.session.statementData = {};
     ctx.session.statementData.docName = ctx?.update?.callback_query?.data;
     ctx.session.statementData.createDate = moment().format('L');
@@ -138,9 +136,9 @@ statement5Scene.on('contact', async (ctx) => {
 
     return ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       null,
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -169,7 +167,7 @@ statement5Scene.action(toSpecialty, (ctx) => {
     ctx.session.field = toSpecialty;
     ctx.editMessageText(toSpecialty, formKeyboard);
     ctx.answerCbQuery();
-  } catch (error) {}
+  } catch (error) { }
 });
 
 statement5Scene.action(done, (ctx) => {
@@ -196,6 +194,7 @@ statement5Scene.action(done, (ctx) => {
 
 statement5Scene.action('yes', async (ctx) => {
   try {
+    ctx.answerCbQuery('Заява створюється, зачекай', { show_alert: true });
     const result = await googleApis('generateDocs', ctx.session.statementData);
 
     if (result.status == 'OK') {
@@ -212,7 +211,6 @@ statement5Scene.action('yes', async (ctx) => {
         Markup.inlineKeyboard([Markup.button.callback(mainMenu, 'mainMenu')]),
       );
     }
-    ctx.answerCbQuery();
   } catch (e) {
     console.log(e);
   }
@@ -222,10 +220,10 @@ statement5Scene.action('no', (ctx) => {
   try {
     ctx.answerCbQuery('Можеш виправити те, що не правильно', { show_alert: true });
     return ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
-  } catch (e) {}
+  } catch (e) { }
 });
 
 statement5Scene.action('statement', (ctx) => {
@@ -241,7 +239,7 @@ statement5Scene.action('back', (ctx) => {
   try {
     ctx.answerCbQuery();
     return ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -258,45 +256,44 @@ statement5Scene.action('mainMenu', (ctx) => {
 });
 
 statement5Scene.on('callback_query', (ctx) => {
-  ctx.answerCbQuery();
+  try {
+    ctx.answerCbQuery();
 
-  if (ctx.session.field == withSpecialty) {
-    if (!ctx.session.statementData.withForm)
-      ctx.session.statementData.withForm = ctx.callbackQuery.data;
-    else if (!ctx.session.statementData.withSpecialty)
-      ctx.session.statementData.withSpecialty = ctx.callbackQuery.data;
+    if (ctx.session.field == withSpecialty) {
+      if (!ctx.session.statementData.withForm)
+        ctx.session.statementData.withForm = ctx.callbackQuery.data;
+      else if (!ctx.session.statementData.withSpecialty)
+        ctx.session.statementData.withSpecialty = ctx.callbackQuery.data;
 
-    if (ctx.session.statementData.withForm && !ctx.session.statementData.withSpecialty) {
-      ctx.editMessageText(withSpecialty, specialtyKeyboard);
-    } else if (ctx.session.statementData.withForm && ctx.session.statementData.withSpecialty) {
-      ctx.session.keyboard[1].text = fieldKeyboard[1].text + '✅';
+      if (ctx.session.statementData.withForm && !ctx.session.statementData.withSpecialty) {
+        ctx.editMessageText(withSpecialty, specialtyKeyboard);
+      } else if (ctx.session.statementData.withForm && ctx.session.statementData.withSpecialty) {
+        ctx.session.keyboard[1].text = fieldKeyboard[1].text + '✅';
+
+        delete ctx.session.field;
+
+        ctx.editMessageText(
+          statementEnter,
+          Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
+        );
+      }
+    } else if (ctx.session.field == toSpecialty) {
+      if (!ctx.session.statementData?.toForm)
+        ctx.session.statementData.toForm = ctx.callbackQuery.data;
+      else if (!ctx.session.statementData?.toSpecialty)
+        ctx.session.statementData.toSpecialty = ctx.callbackQuery.data;
+    }
+
+    if (ctx.session.statementData.toForm && !ctx.session.statementData.toSpecialty) {
+      ctx.editMessageText(toSpecialty, specialtyKeyboard);
+    } else if (ctx.session.statementData.toForm && ctx.session.statementData.toSpecialty) {
+      ctx.session.keyboard[2].text = fieldKeyboard[2].text + '✅';
 
       delete ctx.session.field;
 
-      ctx.editMessageText(
-        'Заповни всі поля і тоді натисни готово, щоб створити заяву',
-        Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
-      );
+      ctx.editMessageText(statementEnter, Markup.inlineKeyboard(ctx.session.keyboard, { columns }));
     }
-  } else if (ctx.session.field == toSpecialty) {
-    if (!ctx.session.statementData?.toForm)
-      ctx.session.statementData.toForm = ctx.callbackQuery.data;
-    else if (!ctx.session.statementData?.toSpecialty)
-      ctx.session.statementData.toSpecialty = ctx.callbackQuery.data;
-  }
-
-  if (ctx.session.statementData.toForm && !ctx.session.statementData.toSpecialty) {
-    ctx.editMessageText(toSpecialty, specialtyKeyboard);
-  } else if (ctx.session.statementData.toForm && ctx.session.statementData.toSpecialty) {
-    ctx.session.keyboard[2].text = fieldKeyboard[2].text + '✅';
-
-    delete ctx.session.field;
-
-    ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
-      Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
-    );
-  }
+  } catch (error) { }
 });
 
 statement5Scene.on('message', (ctx) => {

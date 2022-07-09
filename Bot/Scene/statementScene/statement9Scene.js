@@ -21,6 +21,8 @@ const {
   date,
   share,
   done,
+  academicLeaveDate,
+  photo,
 } = require('./statementText');
 
 // ======================= keyboard =======================
@@ -28,6 +30,8 @@ const {
 const fieldKeyboard = [
   { text: phone, callback_data: phone },
   { text: reason, callback_data: reason },
+  { text: date, callback_data: date },
+  { text: photo, callback_data: photo },
   { text: done, callback_data: done },
   { text: 'Назад', callback_data: 'statement' },
 ];
@@ -36,10 +40,10 @@ const backKeyboard = Markup.inlineKeyboard([{ text: 'Назад', callback_data:
 
 // ======================= scene function =======================
 
-const statement4Scene = new Scenes.BaseScene('statement4Scene');
+const statement9Scene = new Scenes.BaseScene('statement9Scene');
 const columns = 3;
 
-statement4Scene.command('/start', (ctx) => {
+statement9Scene.command('/start', (ctx) => {
   try {
     {
       ctx.deleteMessage();
@@ -50,10 +54,13 @@ statement4Scene.command('/start', (ctx) => {
   }
 });
 
-statement4Scene.enter((ctx) => {
+statement9Scene.enter((ctx) => {
   try {
     ctx.session.keyboard = JSON.parse(JSON.stringify(fieldKeyboard));
-    ctx.editMessageText(statementEnter, Markup.inlineKeyboard(ctx.session.keyboard, { columns }));
+    ctx.editMessageText(
+      statementEnter + "\n\nДокумент не обов'язковий",
+      Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
+    );
     ctx.session.statementData = {};
     ctx.session.statementData.docName = ctx?.update?.callback_query?.data;
     ctx.session.statementData.createDate = moment().format('L');
@@ -62,7 +69,7 @@ statement4Scene.enter((ctx) => {
   }
 });
 
-statement4Scene.action(phone, (ctx) => {
+statement9Scene.action(phone, (ctx) => {
   try {
     ctx.reply(
       sharePhone,
@@ -76,7 +83,7 @@ statement4Scene.action(phone, (ctx) => {
   }
 });
 
-statement4Scene.on('contact', async (ctx) => {
+statement9Scene.on('contact', async (ctx) => {
   try {
     const payload = { phone: '+' + ctx?.message?.contact?.phone_number };
     const userInfo = await googleApis('checkPhone', payload);
@@ -123,7 +130,7 @@ statement4Scene.on('contact', async (ctx) => {
   }
 });
 
-statement4Scene.action(reason, (ctx) => {
+statement9Scene.action(reason, (ctx) => {
   try {
     ctx.session.field = reason;
     ctx.editMessageText(absenceReason, backKeyboard);
@@ -133,9 +140,34 @@ statement4Scene.action(reason, (ctx) => {
   }
 });
 
-statement4Scene.on('text', (ctx) => {
+statement9Scene.action(date, (ctx) => {
   try {
-    if (ctx.session.field == reason) {
+    ctx.session.field = date;
+    ctx.editMessageText(academicLeaveDate, backKeyboard);
+    ctx.answerCbQuery();
+  } catch (error) { }
+});
+
+statement9Scene.on('text', (ctx) => {
+  try {
+    if (ctx.session.field == date) {
+      const absenceDate = ctx.message.text.split('-');
+
+      if (
+        !moment(absenceDate[0], 'DD.MM.YYYY').isValid() ||
+        !moment(absenceDate[1], 'DD.MM.YYYY').isValid()
+      ) {
+        ctx.deleteMessage(ctx.message.message_id);
+        return ctx.telegram
+          .editMessageText(ctx.from.id, ctx.session.oneMessageId, null, dateError, backKeyboard)
+          .catch((err) => { });
+      }
+
+      ctx.session.statementData.sDate = absenceDate[0];
+      ctx.session.statementData.eDate = absenceDate[1];
+      ctx.session.keyboard[2].text = fieldKeyboard[2].text + '✅';
+      ctx.deleteMessage();
+    } else if (ctx.session.field == reason) {
       ctx.session.keyboard[1].text = fieldKeyboard[1].text + '✅';
       ctx.session.statementData.reason = ctx.message.text;
       ctx.deleteMessage();
@@ -155,11 +187,42 @@ statement4Scene.on('text', (ctx) => {
   }
 });
 
-statement4Scene.action(done, (ctx) => {
+statement9Scene.action(photo, (ctx) => {
+  try {
+    ctx.session.field = photo;
+    ctx.editMessageText(photoText, backKeyboard);
+    ctx.answerCbQuery();
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+statement9Scene.on('photo', async (ctx) => {
+  if (ctx.session.field == photo) {
+    ctx.session.statementData.uri = (
+      await ctx.telegram.getFileLink(ctx.message.photo[ctx.message.photo.length - 1].file_id)
+    ).href;
+    ctx.session.keyboard[3].text = fieldKeyboard[3].text + '✅';
+  }
+
+  delete ctx.session.field;
+  ctx.session.photoId = ctx.message.message_id;
+  return ctx.telegram.editMessageText(
+    ctx.from.id,
+    ctx.session.oneMessageId,
+    null,
+    statementEnter,
+    Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
+  );
+});
+
+statement9Scene.action(done, (ctx) => {
   try {
     const infoArr = ctx.session.statementData;
 
-    const info = `Група: ${infoArr.group}\nПІБ: ${infoArr.pib}\nНомер: ${infoArr.phone}\nПричина: відсутній(ня) у зв\'язку з ${infoArr.reason}\n\nВсе вірно?`;
+    const info = `Група: ${infoArr.group}\nПІБ: ${infoArr.pib}\nНомер: ${infoArr.phone
+      }\nВідсутність: з ${infoArr.sDate} по ${infoArr.eDate}\nПричина: відсутній(ня) у зв\'язку з ${infoArr.reason
+      }\nСкан: ${infoArr.uri ? 'завантажено' : 'немає'}\n\nВсе вірно?`;
     if (/undefined/.test(info)) {
       return ctx.answerCbQuery(fieldNotFill, { show_alert: true });
     }
@@ -176,7 +239,7 @@ statement4Scene.action(done, (ctx) => {
   }
 });
 
-statement4Scene.action('yes', async (ctx) => {
+statement9Scene.action('yes', async (ctx) => {
   try {
     ctx.answerCbQuery('Заява створюється, зачекай', { show_alert: true });
     const result = await googleApis('generateDocs', ctx.session.statementData);
@@ -200,7 +263,7 @@ statement4Scene.action('yes', async (ctx) => {
   }
 });
 
-statement4Scene.action('no', (ctx) => {
+statement9Scene.action('no', (ctx) => {
   try {
     ctx.answerCbQuery('Можеш виправити те, що не правильно', { show_alert: true });
     return ctx.editMessageText(
@@ -210,7 +273,7 @@ statement4Scene.action('no', (ctx) => {
   } catch (e) { }
 });
 
-statement4Scene.action('statement', (ctx) => {
+statement9Scene.action('statement', (ctx) => {
   try {
     ctx.answerCbQuery();
     return ctx.scene.enter('statementScene');
@@ -219,7 +282,7 @@ statement4Scene.action('statement', (ctx) => {
   }
 });
 
-statement4Scene.action('back', (ctx) => {
+statement9Scene.action('back', (ctx) => {
   try {
     ctx.answerCbQuery();
     return ctx.editMessageText(
@@ -231,7 +294,7 @@ statement4Scene.action('back', (ctx) => {
   }
 });
 
-statement4Scene.action('mainMenu', (ctx) => {
+statement9Scene.action('mainMenu', (ctx) => {
   try {
     ctx.scene.enter('welcomeScene');
   } catch (e) {
@@ -239,7 +302,7 @@ statement4Scene.action('mainMenu', (ctx) => {
   }
 });
 
-statement4Scene.on('message', (ctx) => {
+statement9Scene.on('message', (ctx) => {
   try {
     ctx.deleteMessage;
   } catch (e) {
@@ -247,9 +310,9 @@ statement4Scene.on('message', (ctx) => {
   }
 });
 
-statement4Scene.leave((ctx) => {
+statement9Scene.leave((ctx) => {
   delete ctx.session.statementData;
   delete ctx.session.keyboard;
 });
 
-module.exports = { statement4Scene };
+module.exports = { statement9Scene };

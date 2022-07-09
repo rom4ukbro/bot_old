@@ -5,6 +5,7 @@ const emoji = require('node-emoji');
 const mainMenu = 'Головне меню';
 const choiceScheduleText = 'Розклад';
 const choiceProgressText = 'Успішність';
+const choiceStatementText = 'Заяви';
 
 const welcomeText = `Привіт! ${emoji.get(':wave:')}
 Я — твоя права рука під час навчального року, адже в мене ти завжди можеш дізнатись, які в тебе пари протягом тижня ${emoji.get(
@@ -207,4 +208,5 @@ module.exports = {
   errorLoginText,
   defaultValueText,
   resetDefaultValueText,
+  choiceStatementText,
 };

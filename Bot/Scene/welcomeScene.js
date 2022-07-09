@@ -1,13 +1,21 @@
 const { Markup, Scenes } = require('telegraf');
 
-const { welcomeText, choiceScheduleText, choiceProgressText } = require('../text');
+const { Users } = require('../../DB/connect.js');
+
+const {
+  welcomeText,
+  choiceScheduleText,
+  choiceProgressText,
+  choiceStatementText,
+} = require('../text');
+const { deleteMessage } = require('../helpers');
 
 // ===================   keyboard   =========================
 
 const choiceKeyboard = Markup.inlineKeyboard([
   [{ text: choiceScheduleText, callback_data: choiceScheduleText }],
-  [{ text: choiceProgressText, callback_data: choiceProgressText }],
-  [{ text: 'Заяви', callback_data: 'statement' }],
+  // [{ text: choiceProgressText, callback_data: choiceProgressText }],
+  // [{ text: choiceStatementText, callback_data: choiceStatementText }],
 ]);
 
 // ===================   Welcome scene   =========================
@@ -17,21 +25,18 @@ const welcomeScene = new Scenes.BaseScene('welcomeScene');
 welcomeScene.enter((ctx) => {
   try {
     if (ctx?.update?.callback_query?.message?.message_id)
-      ctx.editMessageText(welcomeText, choiceKeyboard);
+      ctx.editMessageText(welcomeText, choiceKeyboard).catch((err) => {
+        ctx.editMessageText(welcomeText + ':', choiceKeyboard);
+      });
     else ctx.reply(welcomeText, choiceKeyboard);
 
-    ctx.session.id = ctx?.update?.callback_query?.message?.message_id || ctx.message.message_id;
-    for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
-      ctx.deleteMessage(i).catch((err) => {});
-    }
-  } catch (e) {
-    console.log(e);
-  }
+    deleteMessage(ctx, ctx?.update?.callback_query?.message?.message_id || ctx.message.message_id, ctx.session.oneMessageId)
+  } catch (e) { }
 });
 
-welcomeScene.action('statement', (ctx) => {
+welcomeScene.action(choiceStatementText, (ctx) => {
   try {
-    ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
+    ctx.session.oneMessageId = ctx.update.callback_query.message.message_id;
 
     ctx.scene.enter('statementScene');
     ctx.answerCbQuery();
@@ -40,15 +45,29 @@ welcomeScene.action('statement', (ctx) => {
   }
 });
 
-welcomeScene.action(choiceScheduleText, (ctx) => {
+welcomeScene.action(choiceScheduleText, async (ctx) => {
   try {
     ctx.answerCbQuery();
-    ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
+
+    ctx.session.oneMessageId = ctx.update.callback_query.message.message_id;
 
     if (!!ctx.session.value && !!ctx.session.mode) {
       ctx.scene.enter('scheduleScene');
     } else if (!ctx.session.default_value || !ctx.session.default_role) {
-      ctx.scene.enter('defaultValueScene');
+      await Users.findOne({ _id: ctx.from.id })
+        .then(async (result) => {
+          ctx.session.default_value = result?.default_value;
+          ctx.session.default_role = result?.default_role;
+          ctx.session.weekShift = 0;
+        })
+        .catch((err) => { });
+
+      if (ctx.session.default_value && ctx.session.default_role) {
+        ctx.session.default_mode = true;
+        return ctx.scene.enter('scheduleScene');
+      }
+
+      return ctx.scene.enter('defaultValueScene');
     } else if (ctx.session.default_value && ctx.session.default_role) {
       ctx.session.default_mode = true;
       ctx.scene.enter('scheduleScene');
@@ -62,8 +81,8 @@ welcomeScene.action(choiceScheduleText, (ctx) => {
 
 welcomeScene.action(choiceProgressText, (ctx) => {
   try {
-    // return ctx.answerCbQuery('Це поки що не доступно, бо немає підтримки від деканату :<');
-    ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
+    return ctx.answerCbQuery('Це поки що не доступно :< Я працюю над цим ');
+    ctx.session.oneMessageId = ctx.update.callback_query.message.message_id;
     ctx.scene.enter('progressScene');
   } catch (e) {
     console.log(e);

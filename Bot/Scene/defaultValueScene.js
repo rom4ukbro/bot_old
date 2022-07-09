@@ -12,13 +12,14 @@ const { getArrTeacher, getArrGroup } = require('../../Parser/getGroupAndTeacher.
 const { findGroup, findTeacher } = require('../../Parser/search.js');
 
 const {
-  chooseWelcomeText,
   choiceStudentText,
   choiceTeacherText,
   defaultValueText,
 } = require('../text');
 
 const { Users } = require('../../DB/connect.js');
+
+const { deleteMessage } = require('../helpers');
 
 // ===================   keyboard   =========================
 
@@ -34,18 +35,13 @@ const choiceKeyboard = Markup.inlineKeyboard([
 
 const defaultValueScene = new Scenes.BaseScene('defaultValueScene');
 
-const chooseScene = new Scenes.BaseScene('chooseScene');
-
 defaultValueScene.enter((ctx) => {
   try {
     if (ctx?.update?.callback_query?.message?.message_id)
       ctx.editMessageText(defaultValueText, choiceKeyboard);
     else ctx.reply(defaultValueText, choiceKeyboard);
 
-    ctx.session.id = ctx?.update?.callback_query?.message?.message_id || ctx.message.message_id;
-    for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
-      ctx.deleteMessage(i).catch((err) => {});
-    }
+    deleteMessage(ctx, ctx?.update?.callback_query?.message?.message_id || ctx.message.message_id)
   } catch (e) {
     console.log(e);
   }
@@ -53,7 +49,7 @@ defaultValueScene.enter((ctx) => {
 
 defaultValueScene.action(choiceStudentText, async (ctx) => {
   try {
-    ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
+    ctx.session.oneMessageId = ctx.update.callback_query.message.message_id;
     ctx.session.weekShift = 0;
     ctx.session.searchArr = await getArrGroup();
     ctx.session.mode = 'group';
@@ -66,7 +62,7 @@ defaultValueScene.action(choiceStudentText, async (ctx) => {
 
 defaultValueScene.action(choiceTeacherText, async (ctx) => {
   try {
-    ctx.session.oneMessegeId = ctx.update.callback_query.message.message_id;
+    ctx.session.oneMessageId = ctx.update.callback_query.message.message_id;
     ctx.session.weekShift = 0;
     ctx.session.searchArr = await getArrTeacher();
     ctx.session.mode = 'teacher';
@@ -81,7 +77,7 @@ defaultValueScene.action('back', async (ctx) => {
   try {
     await ctx.scene.enter('welcomeScene');
     ctx.answerCbQuery();
-  } catch (e) {}
+  } catch (e) { }
 });
 
 defaultValueScene.command('start', async (ctx) => {
@@ -90,23 +86,22 @@ defaultValueScene.command('start', async (ctx) => {
 
     await ctx.scene.enter('chooseScene');
 
-    ctx.session.id = ctx.message.message_id;
-    for (i = ctx.session.id - 100; i <= ctx.session.id; i++) {
-      ctx.deleteMessage(i).catch((err) => {});
-    }
+    deleteMessage(ctx, ctx.message.message_id)
   } catch (e) {
     console.log(e);
   }
 });
 
 defaultValueScene.on('text', (ctx) => {
-  if (!ctx.session.mode) {
-    ctx.deleteMessage(ctx.message.message_id);
-  } else if (ctx.session.mode == 'group') {
-    searchFnc('group', ctx);
-  } else if (ctx.session.mode == 'teacher') {
-    searchFnc('teacher', ctx);
-  }
+  try {
+    if (!ctx.session.mode) {
+      ctx.deleteMessage(ctx.message.message_id).catch((e) => { });
+    } else if (ctx.session.mode == 'group') {
+      searchFnc('group', ctx);
+    } else if (ctx.session.mode == 'teacher') {
+      searchFnc('teacher', ctx);
+    }
+  } catch (e) { }
 });
 
 // ===================   Helper`s function   =========================
@@ -115,13 +110,13 @@ function searchFnc(mode, ctx) {
   try {
     ctx.session.id = ctx.message.message_id;
     for (i = ctx.session.id - 100; i < ctx.session.id; i++) {
-      if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
+      if (i != ctx.session.oneMessageId) ctx.deleteMessage(i).catch((err) => { });
     }
     if (ctx.session.searchArr[0] === 'error') {
-      ctx.deleteMessage(ctx.message.message_id);
+      ctx.deleteMessage(ctx.message.message_id).catch((e) => { });
       return ctx.telegram.editMessageText(
         ctx.from.id,
-        ctx.session.oneMessegeId,
+        ctx.session.oneMessageId,
         '',
         'Сталася помилка з сайтом, спробуй пізніше.\nНатисни /start',
       );
@@ -134,13 +129,10 @@ function searchFnc(mode, ctx) {
       ctx.session.resultArr = findTeacher(ctx.session.searchArr, ctx.message.text);
     }
     if (ctx.session.resultArr.length === 0) {
-      ctx.session.id = ctx.message.message_id;
-      for (i = ctx.session.id; i >= ctx.session.id - 100; i--) {
-        if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
-      }
+      deleteMessage(ctx, ctx.message.message_id, ctx.session.oneMessageId)
       return ctx.telegram
-        .editMessageText(ctx.from.id, ctx.session.oneMessegeId, '', cantFindQuery)
-        .catch((err) => {});
+        .editMessageText(ctx.from.id, ctx.session.oneMessageId, '', cantFindQuery)
+        .catch((err) => { });
     }
     if (ctx.session.resultArr.length === 1) {
       ctx.session.value = ctx.session.resultArr[0];
@@ -167,7 +159,7 @@ function searchFnc(mode, ctx) {
 
       ctx.session.id = ctx.message.message_id;
       for (i = ctx.session.id; i >= ctx.session.id - 100; i--) {
-        if (i != ctx.session.oneMessegeId) ctx.deleteMessage(i).catch((err) => {});
+        if (i != ctx.session.oneMessageId) ctx.deleteMessage(i).catch((err) => { });
       }
       return ctx.scene.enter('scheduleScene');
     }

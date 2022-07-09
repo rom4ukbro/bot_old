@@ -15,6 +15,7 @@ const {
   review,
   phoneNotFound,
   fieldNotFill,
+  statementEnter,
   phone,
   reason,
   date,
@@ -53,10 +54,7 @@ statement1Scene.command('/start', (ctx) => {
 statement1Scene.enter((ctx) => {
   try {
     ctx.session.keyboard = JSON.parse(JSON.stringify(fieldKeyboard));
-    ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
-      Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
-    );
+    ctx.editMessageText(statementEnter, Markup.inlineKeyboard(ctx.session.keyboard, { columns }));
     ctx.session.statementData = {};
     ctx.session.statementData.docName = ctx?.update?.callback_query?.data;
     ctx.session.statementData.createDate = moment().format('L');
@@ -94,6 +92,15 @@ statement1Scene.on('contact', async (ctx) => {
       );
     }
 
+    if (userInfo.status === 'failed') {
+      ctx.deleteMessage(ctx.message.reply_to_message.message_id);
+      ctx.deleteMessage(ctx.message.message_id);
+      return ctx.editMessageText(
+        'Не вдалося перевірити номер',
+        Markup.inlineKeyboard([Markup.button.callback(mainMenu, 'mainMenu')]),
+      );
+    }
+
     ctx.session.statementData.gender = userInfo[14] == 'Жіноча' ? 'female' : 'male';
 
     ctx.session.statementData.phone = '+' + ctx.message.contact.phone_number;
@@ -116,9 +123,9 @@ statement1Scene.on('contact', async (ctx) => {
 
     return ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       null,
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -141,7 +148,7 @@ statement1Scene.action(date, (ctx) => {
     ctx.session.field = date;
     ctx.editMessageText(absenceDate, backKeyboard);
     ctx.answerCbQuery();
-  } catch (error) {}
+  } catch (error) { }
 });
 
 statement1Scene.on('text', (ctx) => {
@@ -155,8 +162,8 @@ statement1Scene.on('text', (ctx) => {
       ) {
         ctx.deleteMessage(ctx.message.message_id);
         return ctx.telegram
-          .editMessageText(ctx.from.id, ctx.session.oneMessegeId, null, dateError, backKeyboard)
-          .catch((err) => {});
+          .editMessageText(ctx.from.id, ctx.session.oneMessageId, null, dateError, backKeyboard)
+          .catch((err) => { });
       }
 
       ctx.session.statementData.sDate = absenceDate[0];
@@ -173,9 +180,9 @@ statement1Scene.on('text', (ctx) => {
     delete ctx.session.field;
     return ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       null,
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -206,6 +213,7 @@ statement1Scene.action(done, (ctx) => {
 
 statement1Scene.action('yes', async (ctx) => {
   try {
+    ctx.answerCbQuery('Заява створюється, зачекай', { show_alert: true });
     const result = await googleApis('generateDocs', ctx.session.statementData);
 
     if (result.status == 'OK') {
@@ -222,7 +230,6 @@ statement1Scene.action('yes', async (ctx) => {
         Markup.inlineKeyboard([Markup.button.callback(mainMenu, 'mainMenu')]),
       );
     }
-    ctx.answerCbQuery();
   } catch (e) {
     console.log(e);
   }
@@ -232,10 +239,10 @@ statement1Scene.action('no', (ctx) => {
   try {
     ctx.answerCbQuery('Можеш виправити те, що не правильно', { show_alert: true });
     return ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
-  } catch (e) {}
+  } catch (e) { }
 });
 
 statement1Scene.action('statement', (ctx) => {
@@ -251,7 +258,7 @@ statement1Scene.action('back', (ctx) => {
   try {
     ctx.answerCbQuery();
     return ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {

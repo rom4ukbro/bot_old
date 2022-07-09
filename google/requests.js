@@ -1,6 +1,19 @@
+const {
+  absenceLess,
+  explanatoryNote,
+  individualTraining,
+  distanceLearning,
+  chooseSpecialty,
+  deductionsStudent,
+  renewalStudent,
+  rearrangementTest,
+  academicLeave,
+  transferSession,
+} = require('../Bot/Scene/statementScene/statementText');
+
 function getRequests(payload) {
   const req = {
-    'Відсутність на парах': [
+    [absenceLess]: [
       {
         replaceAllText: {
           containsText: {
@@ -65,7 +78,7 @@ function getRequests(payload) {
         },
       },
     ],
-    'Пояснювальна записка': [
+    [explanatoryNote]: [
       {
         replaceAllText: {
           containsText: {
@@ -130,7 +143,7 @@ function getRequests(payload) {
         },
       },
     ],
-    'Індивідуальний графік навчання': [
+    [individualTraining]: [
       {
         insertInlineImage: {
           uri: payload.uri,
@@ -192,7 +205,7 @@ function getRequests(payload) {
         },
       },
     ],
-    'Дистанційне навчання': [
+    [distanceLearning]: [
       {
         replaceAllText: {
           containsText: {
@@ -239,7 +252,7 @@ function getRequests(payload) {
         },
       },
     ],
-    'Переведення на іншу спеціальність': [
+    [chooseSpecialty]: [
       {
         replaceAllText: {
           containsText: {
@@ -313,7 +326,7 @@ function getRequests(payload) {
         },
       },
     ],
-    'Відрахування зa власним бажанням': [
+    [deductionsStudent]: [
       {
         replaceAllText: {
           containsText: {
@@ -387,7 +400,7 @@ function getRequests(payload) {
         },
       },
     ],
-    'Поновлення до складу студентів': [
+    [renewalStudent]: [
       {
         replaceAllText: {
           containsText: {
@@ -458,11 +471,229 @@ function getRequests(payload) {
             matchCase: true,
           },
           replaceText: payload.createDate,
+        },
+      },
+    ],
+    [rearrangementTest]: [
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{inGenitive}}',
+            matchCase: true,
+          },
+          replaceText: payload.inGenitive,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{phone}}',
+            matchCase: true,
+          },
+          replaceText: payload.phone,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{group}}',
+            matchCase: true,
+          },
+          replaceText: payload.group,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{discipline}}',
+            matchCase: true,
+          },
+          replaceText: payload.discipline,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{createDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.createDate,
+        },
+      },
+    ],
+    [academicLeave]: [
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{inGenitive}}',
+            matchCase: true,
+          },
+          replaceText: payload.inGenitive,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{phone}}',
+            matchCase: true,
+          },
+          replaceText: payload.phone,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{group}}',
+            matchCase: true,
+          },
+          replaceText: payload.group,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{reason}}',
+            matchCase: true,
+          },
+          replaceText: payload.reason,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{createDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.createDate,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{sDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.sDate,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{eDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.eDate,
+        },
+      },
+    ],
+    [transferSession]: [
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{inGenitive}}',
+            matchCase: true,
+          },
+          replaceText: payload.inGenitive,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{phone}}',
+            matchCase: true,
+          },
+          replaceText: payload.phone,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{group}}',
+            matchCase: true,
+          },
+          replaceText: payload.group,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{reason}}',
+            matchCase: true,
+          },
+          replaceText: payload.reason,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{createDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.createDate,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{sDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.sDate,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{eDate}}',
+            matchCase: true,
+          },
+          replaceText: payload.eDate,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{sem}}',
+            matchCase: true,
+          },
+          replaceText: payload.sem,
+        },
+      },
+      {
+        replaceAllText: {
+          containsText: {
+            text: '{{academicYears}}',
+            matchCase: true,
+          },
+          replaceText: payload.academicYears,
         },
       },
     ],
   };
-  return req[payload.docName];
+
+  let res = req[payload.docName];
+
+  if (payload.docName == academicLeave || payload.docName == transferSession) {
+    const photo = {
+        insertInlineImage: {
+          uri: payload.uri,
+          endOfSegmentLocation: {},
+        },
+      },
+      noPhoto = {
+        replaceAllText: {
+          containsText: {
+            text: 'До заяви додаю: скан прикріплений нижче.',
+            matchCase: true,
+          },
+          replaceText: '',
+        },
+      };
+
+    payload.uri ? res.push(photo) : res.push(noPhoto);
+  }
+
+  return res;
 }
 
 module.exports = { getRequests };

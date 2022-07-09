@@ -15,6 +15,7 @@ const {
   review,
   phoneNotFound,
   fieldNotFill,
+  statementEnter,
   phone,
   reason,
   date,
@@ -53,10 +54,7 @@ statement2Scene.command('/start', (ctx) => {
 statement2Scene.enter((ctx) => {
   try {
     ctx.session.keyboard = JSON.parse(JSON.stringify(fieldKeyboard));
-    ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
-      Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
-    );
+    ctx.editMessageText(statementEnter, Markup.inlineKeyboard(ctx.session.keyboard, { columns }));
     ctx.session.statementData = {};
     ctx.session.statementData.docName = ctx?.update?.callback_query?.data;
     ctx.session.statementData.createDate = moment().format('L');
@@ -116,9 +114,9 @@ statement2Scene.on('contact', async (ctx) => {
 
     return ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       null,
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -154,8 +152,8 @@ statement2Scene.on('text', (ctx) => {
       if (!moment(absenceDate, 'DD.MM.YYYY').isValid()) {
         ctx.deleteMessage(ctx.message.message_id);
         return ctx.telegram
-          .editMessageText(ctx.from.id, ctx.session.oneMessegeId, null, dateError, backKeyboard)
-          .catch((err) => {});
+          .editMessageText(ctx.from.id, ctx.session.oneMessageId, null, dateError, backKeyboard)
+          .catch((err) => { });
       }
 
       ctx.session.statementData.absenceDate = absenceDate;
@@ -171,9 +169,9 @@ statement2Scene.on('text', (ctx) => {
     delete ctx.session.field;
     return ctx.telegram.editMessageText(
       ctx.from.id,
-      ctx.session.oneMessegeId,
+      ctx.session.oneMessageId,
       null,
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {
@@ -204,6 +202,7 @@ statement2Scene.action(done, (ctx) => {
 
 statement2Scene.action('yes', async (ctx) => {
   try {
+    ctx.answerCbQuery('Заява створюється, зачекай', { show_alert: true });
     const result = await googleApis('generateDocs', ctx.session.statementData);
 
     if (result.status == 'OK') {
@@ -220,7 +219,6 @@ statement2Scene.action('yes', async (ctx) => {
         Markup.inlineKeyboard([Markup.button.callback(mainMenu, 'mainMenu')]),
       );
     }
-    ctx.answerCbQuery();
   } catch (e) {
     console.log(e);
   }
@@ -230,10 +228,10 @@ statement2Scene.action('no', (ctx) => {
   try {
     ctx.answerCbQuery('Можеш виправити те, що не правильно', { show_alert: true });
     return ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
-  } catch (e) {}
+  } catch (e) { }
 });
 
 statement2Scene.action('statement', (ctx) => {
@@ -249,7 +247,7 @@ statement2Scene.action('back', (ctx) => {
   try {
     ctx.answerCbQuery();
     return ctx.editMessageText(
-      'Заповни всі поля і тоді натисни готово, щоб створити заяву',
+      statementEnter,
       Markup.inlineKeyboard(ctx.session.keyboard, { columns }),
     );
   } catch (e) {

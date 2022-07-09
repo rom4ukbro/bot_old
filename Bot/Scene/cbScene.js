@@ -20,8 +20,8 @@ cbScene.enter((ctx) => {
 
 cbScene.on('text', (ctx) => {
   try {
-    ctx.deleteMessage(ctx.message.message_id);
-    ctx.deleteMessage(ctx.session.cbId);
+    ctx.deleteMessage(ctx.message.message_id).catch((e) => {});
+    ctx.deleteMessage(ctx.session.cbId).catch((e) => {});
     ctx.scene.enter('chooseScene');
     ctx.telegram.sendMessage(
       '-1001378618059',
